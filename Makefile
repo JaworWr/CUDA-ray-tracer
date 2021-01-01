@@ -2,24 +2,28 @@ CUDA_HOME := /usr/local/cuda-10.1
 CC    := g++
 NVCC  := $(CUDA_HOME)/bin/nvcc
 LIB   := -lGLEW -lGL -lglfw
-LIBCU := $(LIB) -L$(CUDA_HOME)/lib -lcudart
+LIB_CUDA := $(LIB) -L$(CUDA_HOME)/lib -lcudart
 INC   :=
-INCCU := $(INC) -I$(CUDA_HOME)/include -I$(CUDA_HOME)/samples/common/inc
+INC_CUDA := $(INC) -I$(CUDA_HOME)/include -I.
 
-all: ray-tracer-cpu
+all: ray-tracer-cpu ray-tracer-cuda
 
 HEADERS := shader-program.h update.h
-OBJ_COMMON := ray-tracer.o shader-program.o
-OBJ_CPU := $(OBJ_COMMON) update-cpu.o
+OBJ := ray-tracer.o shader-program.o
+OBJ_CPU := $(OBJ) update-cpu.o
+OBJ_CUDA := $(OBJ) update-cuda.o
 
 %.o: %.cpp
 	$(CC) -c -o $@ $< $(INC)
 
 %.o: %.cu
-	$(NVCC) -c -o $@ $< $(INCCU)
+	$(NVCC) -c -o $@ $< $(INC_CUDA)
 
 ray-tracer-cpu: $(OBJ_CPU) $(HEADERS)
-	$(NVCC) -o $@ $(OBJ_CPU) $(LIBCU)
+	$(CC) -o $@ $(OBJ_CPU) $(LIB)
+
+ray-tracer-cuda: $(OBJ_CUDA) $(HEADERS)
+	$(NVCC) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
 
 clean:
-	rm -f $(OBJ) ray-tracer-cpu
+	rm -f *.o ray-tracer-*
