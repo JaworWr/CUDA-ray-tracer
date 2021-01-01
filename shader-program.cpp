@@ -9,13 +9,20 @@
 std::string read_file(const char *path)
 {
     std::stringstream ss;
-    std::ifstream file(path);
+    std::ifstream file;
+    file.exceptions(std::ios::failbit | std::ios::badbit);
+    file.open(path);
     ss << file.rdbuf();
     return ss.str();
 }
 
+ShaderProgram::ShaderProgram()
+:m_program_id(-1)
+{
 
-ShaderProgram::ShaderProgram(const char *vertex_path, const char *fragment_path)
+}
+
+void ShaderProgram::init(const char *vertex_path, const char *fragment_path)
 {
     int success;
     char info_log[512];
