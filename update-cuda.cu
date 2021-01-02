@@ -2,7 +2,7 @@
 #include <cuda_gl_interop.h>
 #include <surface_functions.h>
 #include <cstdio>
-#include "helper_cuda.h"
+#include "helper_cuda_opengl.h"
 
 cudaGraphicsResource_t resource;
 size_t h_width, h_height;

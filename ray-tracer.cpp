@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
 {
     // GLFW initialization
     glfwInit();
-    atexit(glfwTerminate);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -60,6 +59,7 @@ int main(int argc, char *argv[])
     }
     catch (std::ifstream::failure &e) {
         fprintf(stderr, "I/O error during program creation\n%s\n", e.what());
+        glfwTerminate();
         return EXIT_FAILURE;
     }
 
@@ -115,5 +115,6 @@ int main(int argc, char *argv[])
         }
     }
 
+    glfwTerminate();
     return EXIT_SUCCESS;
 }
