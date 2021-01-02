@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
     init_update(texture, width, height);
 
     // render loop
+    int frames = 0;
+    auto start_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         process_inputs(window);
         update();
@@ -103,6 +105,14 @@ int main(int argc, char *argv[])
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        frames++;
+        auto elapsed = glfwGetTime() - start_time;
+        if (elapsed >= 1.0) {
+            printf("FPS: %lf\n", frames / elapsed);
+            frames = 0;
+            start_time = glfwGetTime();
+        }
     }
 
     return EXIT_SUCCESS;
