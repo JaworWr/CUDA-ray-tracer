@@ -166,3 +166,42 @@ Surface Surface::sphere(const glm::vec3 &center, float radius)
     coef.c = glm::dot(center, center) - radius * radius;
     return { coef };
 }
+
+Surface Surface::plane(const glm::vec3 &origin, const glm::vec3 &nv)
+{
+    Coef coef{};
+    coef.x = nv.x;
+    coef.y = nv.y;
+    coef.z = nv.z;
+    coef.c = -glm::dot(origin, nv);
+    return { coef };
+}
+
+Surface Surface::dingDong()
+{
+    Coef coef{};
+    coef.x2 = coef.y2 = coef.z = 1.0f;
+    coef.z3 = -1.0f;
+    return { coef };
+}
+
+Surface Surface::clebsch()
+{
+    Coef coef{};
+    coef.x3 = coef.y3 = coef.x3 = 81.0f;
+    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -189.0f;
+    coef.xyz = 54.0f;
+    coef.xy = coef.yz = coef.xz = 126.0f;
+    coef.x2 = coef.y2 = coef.z2 = -9.0f;
+    coef.x = coef.y = coef.z = 9.0f;
+    coef.c = 1.0f;
+    return { coef };
+}
+
+Surface Surface::cayley()
+{
+    Coef coef{};
+    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -5.0f;
+    coef.xy = coef.yz = coef.xz = 2.0f;
+    return { coef };
+}

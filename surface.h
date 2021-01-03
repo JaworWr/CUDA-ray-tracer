@@ -33,6 +33,10 @@ struct Surface
 
     // Some nice surfaces
     static Surface sphere(const glm::vec3& center, float radius);
+    static Surface plane(const glm::vec3& origin, const glm::vec3& nv);
+    static Surface dingDong();
+    static Surface clebsch();
+    static Surface cayley();
 };
 
 #endif //CUDA_RAY_TRACER_SURFACE_H
