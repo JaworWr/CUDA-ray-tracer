@@ -49,6 +49,7 @@ void update()
     checkCudaErrors( cudaCreateSurfaceObject(&surface_object, &resource_desc) );
 
     update_kernel<<<gridSize, blockSize>>>(surface_object);
+    getLastCudaError("update_kernel error");
 
     cudaDestroySurfaceObject(surface_object);
     cudaGraphicsUnmapResources(1, &resource);
