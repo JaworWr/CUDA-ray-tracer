@@ -1,8 +1,8 @@
 #include "surface.h"
 
-const float TWO_THIRD_PI = M_PI * 2.0f / 3.0f;
+const float TWO_THIRD_PI = M_PIf32 * 2.0f / 3.0f;
 
-__host__ __device__ float Surface::intersect_ray(const glm::vec3 &origin, const glm::vec3 &dir) const
+__host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
 {
     // some helper macros for calculating coefficients
     // the easy coefficients
@@ -139,7 +139,7 @@ __host__ __device__ float Surface::intersect_ray(const glm::vec3 &origin, const 
     return -1.0f;
 }
 
-__host__ __device__ glm::vec3 Surface::normal_vector(const glm::vec3 &pos) const
+__host__ __device__ glm::vec3 normal_vector_impl(const Coef& coef, const glm::vec3 &pos)
 {
     glm::vec3 res = 3.0f * glm::vec3(coef.x3, coef.y3, coef.z3) * pos * pos
             + 2.0f * glm::vec3(coef.x2, coef.y2, coef.z2) * pos
@@ -156,7 +156,27 @@ __host__ __device__ glm::vec3 Surface::normal_vector(const glm::vec3 &pos) const
     return glm::normalize(res);
 }
 
-Surface Surface::sphere(const glm::vec3 &center, float radius)
+float intersect_ray(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
+{
+    return intersect_ray_impl(coef, origin, dir);
+}
+
+glm::vec3 normal_vector(const Coef& coef, const glm::vec3 &pos)
+{
+    return normal_vector_impl(coef, pos);
+}
+
+__device__ float intersect_ray_cuda(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
+{
+    return intersect_ray_impl(coef, origin, dir);
+}
+
+__device__ glm::vec3 normal_vector_cuda(const Coef& coef, const glm::vec3 &pos)
+{
+    return normal_vector_impl(coef, pos);
+}
+
+Coef sphere(const glm::vec3 &center, float radius)
 {
     Coef coef{};
     coef.x2 = coef.y2 = coef.z2 = 1.0f;
@@ -167,7 +187,7 @@ Surface Surface::sphere(const glm::vec3 &center, float radius)
     return { coef };
 }
 
-Surface Surface::plane(const glm::vec3 &origin, const glm::vec3 &nv)
+Coef plane(const glm::vec3 &origin, const glm::vec3 &nv)
 {
     Coef coef{};
     coef.x = nv.x;
@@ -177,7 +197,7 @@ Surface Surface::plane(const glm::vec3 &origin, const glm::vec3 &nv)
     return { coef };
 }
 
-Surface Surface::dingDong()
+Coef dingDong()
 {
     Coef coef{};
     coef.x2 = coef.y2 = coef.z = 1.0f;
@@ -185,7 +205,7 @@ Surface Surface::dingDong()
     return { coef };
 }
 
-Surface Surface::clebsch()
+Coef clebsch()
 {
     Coef coef{};
     coef.x3 = coef.y3 = coef.x3 = 81.0f;
@@ -198,10 +218,10 @@ Surface Surface::clebsch()
     return { coef };
 }
 
-Surface Surface::cayley()
+Coef cayley()
 {
     Coef coef{};
     coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -5.0f;
     coef.xy = coef.yz = coef.xz = 2.0f;
-    return { coef };
+    return {coef};
 }

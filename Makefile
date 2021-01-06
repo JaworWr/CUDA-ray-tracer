@@ -4,8 +4,7 @@ NVCC      := $(CUDA_HOME)/bin/nvcc
 FLAGS     := -std=c++14
 LIB       := -lGLEW -lGL -lglfw
 LIB_CUDA  := $(LIB) -L$(CUDA_HOME)/lib -lcudart
-INC       :=
-INC_CUDA  := $(INC) -I$(CUDA_HOME)/include -I.
+INC       := -I$(CUDA_HOME)/include -I.
 
 all: ray-tracer-cpu ray-tracer-cuda
 
@@ -19,7 +18,7 @@ OBJ_CUDA     := $(OBJ) update-cuda.o
 	$(CC) $(FLAGS) -c -o $@ $< $(INC)
 
 %.o: %.cu
-	$(NVCC) $(FLAGS) -c -o $@ $< $(INC_CUDA)
+	$(NVCC) $(FLAGS) -c -o $@ $< $(INC)
 
 ray-tracer-cpu: $(OBJ_CPU) $(HEADERS)
 	$(NVCC) -o $@ $(OBJ_CPU) $(LIB_CUDA)

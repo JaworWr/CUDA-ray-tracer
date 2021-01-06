@@ -16,27 +16,25 @@ struct Coef
 };
 
 /*
- * A surface defined by F(x, y, z) = 0
- * Where F is a polynomial of degree at most 3
+ * Returns the smallest t > 0 such that origin + t * dir lies on the surface
+ * If it doesn't exist, returns something < 0
  */
-struct Surface
-{
-    Coef coef;
+float intersect_ray(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir);
+/*
+ * Normal vector at a given point
+ */
+glm::vec3 normal_vector(const Coef& coef, const glm::vec3 &pos);
 
-    /*
-     * Ray-surface intersection
-     * If possible, returns the smallest t >= 0 such that origin + t * dir lies on the surface
-     * Otherwise returns something < 0
-     */
-    __host__ __device__ float intersect_ray(const glm::vec3& origin, const glm::vec3& dir) const;
-    __host__ __device__ glm::vec3 normal_vector(const glm::vec3& pos) const;
+#ifdef __CUDA_ARCH__
+__device__ float intersect_ray_cuda(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir);
+__device__ glm::vec3 normal_vector_cuda(const Coef& coef, const glm::vec3 &pos);
+#endif
 
-    // Some nice surfaces
-    static Surface sphere(const glm::vec3& center, float radius);
-    static Surface plane(const glm::vec3& origin, const glm::vec3& nv);
-    static Surface dingDong();
-    static Surface clebsch();
-    static Surface cayley();
-};
+// example surfaces
+Coef sphere(const glm::vec3& center, float radius);
+Coef plane(const glm::vec3& origin, const glm::vec3& nv);
+Coef dingDong();
+Coef clebsch();
+Coef cayley();
 
 #endif //CUDA_RAY_TRACER_SURFACE_H
