@@ -5,6 +5,7 @@
 #include <fstream>
 #include "shader-program.h"
 #include "update.h"
+#include "scene.h"
 
 float vertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -17,8 +18,6 @@ int indices[] = {
         0, 1, 3,
         0, 2, 3
 };
-
-const int width = 1600, height = 1200;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -82,14 +81,17 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // example scene
+    Scene scene(1600, 1200, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+
     // texture creation and initialization
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scene.px_width, scene.px_height, 0, GL_RGB, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    init_update(texture, width, height);
+    init_update(texture, scene);
 
     // render loop
     int frames = 0;

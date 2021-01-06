@@ -1,7 +1,9 @@
 #ifndef CUDA_RAY_TRACER_UPDATE_H
 #define CUDA_RAY_TRACER_UPDATE_H
 
-void init_update(unsigned int texture, int width, int height);
+#include "scene.h"
+
+void init_update(unsigned int texture, const Scene& scene);
 void update();
 
 #endif //CUDA_RAY_TRACER_UPDATE_H
