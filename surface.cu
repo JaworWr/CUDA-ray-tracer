@@ -1,8 +1,9 @@
 #include "surface.h"
 
-const float TWO_THIRD_PI = M_PIf32 * 2.0f / 3.0f;
 
-__host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
+const double TWO_THIRD_PI = M_PI * 2.0 / 3.0;
+
+__host__ __device__ double intersect_ray_impl(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
     // some helper macros for calculating coefficients
     // the easy coefficients
@@ -11,21 +12,21 @@ __host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &
 #define COEF_2(x, y) (dir.x * dir.y)
 #define COEF_0_2(x, y) (origin.x * origin.y)
     // from expansion of (x_0+tx)^3
-#define COEF_2_3(x) (3.0f * origin.x * dir.x * dir.x)
-#define COEF_1_3(x) (3.0f * origin.x * origin.x * dir.x)
+#define COEF_2_3(x) (3.0 * origin.x * dir.x * dir.x)
+#define COEF_1_3(x) (3.0 * origin.x * origin.x * dir.x)
     // from expansion of (x_0+tx)^2(y_0+ty)
-#define COEF_2_21(x, y) (dir.x * (dir.x * origin.y + 2.0f * origin.x * dir.y))
-#define COEF_1_21(x, y) (origin.x * (origin.x * dir.y + 2.0f * dir.x * origin.y))
+#define COEF_2_21(x, y) (dir.x * (dir.x * origin.y + 2.0 * origin.x * dir.y))
+#define COEF_1_21(x, y) (origin.x * (origin.x * dir.y + 2.0 * dir.x * origin.y))
     // from expansion of (x_0+tx)(y_0+ty)(z_0+tz)
 #define COEF_2_111(x, y, z) (dir.x * dir.y * origin.z + dir.x * origin.y * dir.z + origin.x * dir.y * dir.z)
 #define COEF_1_111(x, y, z) (dir.x * origin.y * origin.z + origin.x * dir.y * origin.z + origin.x * origin.y * dir.z)
     // from expansion of (x_0+tx)^2
-#define COEF_1_2(x) (2.0f * origin.x * dir.x)
+#define COEF_1_2(x) (2.0 * origin.x * dir.x)
     // from expansion of (x_0+tx)(y_0+ty)
 #define COEF_1_11(x, y) (origin.x * dir.y + dir.x * origin.y)
 
     // coefficients of the polynomial
-    float t3 = coef.x3 * COEF_3(x, x, x)
+    double t3 = coef.x3 * COEF_3(x, x, x)
             + coef.y3 * COEF_3(y, y, y)
             + coef.z3 * COEF_3(z, z, z)
             + coef.x2y * COEF_3(x, x, y)
@@ -35,7 +36,7 @@ __host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &
             + coef.y2z * COEF_3(y, y, z)
             + coef.yz2 * COEF_3(y, z, z)
             + coef.xyz * COEF_3(x, y, z);
-    float t2 = coef.x3 * COEF_2_3(x)
+    double t2 = coef.x3 * COEF_2_3(x)
             + coef.y3 * COEF_2_3(y)
             + coef.z3 * COEF_2_3(z)
             + coef.x2y * COEF_2_21(x, y)
@@ -51,7 +52,7 @@ __host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &
             + coef.xy * COEF_2(x, y)
             + coef.xz * COEF_2(x, z)
             + coef.yz * COEF_2(y, z);
-    float t1 = coef.x3 * COEF_1_3(x)
+    double t1 = coef.x3 * COEF_1_3(x)
             + coef.y3 * COEF_1_3(y)
             + coef.z3 * COEF_1_3(z)
             + coef.x2y * COEF_1_21(x, y)
@@ -68,7 +69,7 @@ __host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &
             + coef.xz * COEF_1_11(x, z)
             + coef.yz * COEF_1_11(y, z)
             + coef.x * dir.x + coef.y * dir.y + coef.z * dir.z;
-    float t0 = coef.x3 * COEF_0_3(x, x, x)
+    double t0 = coef.x3 * COEF_0_3(x, x, x)
             + coef.y3 * COEF_0_3(y, y, y)
             + coef.z3 * COEF_0_3(z, z, z)
             + coef.x2y * COEF_0_3(x, x, y)
@@ -87,141 +88,147 @@ __host__ __device__ float intersect_ray_impl(const Coef& coef, const glm::vec3 &
             + coef.x * origin.x + coef.y * origin.y + coef.z * origin.z + coef.c;
 
     // find the roots of the polynomial
-    if (t3 != 0.0f) {
+    if (abs(t3) > EPS) {
         // degree = 3
         t2 /= t3;
         t1 /= t3;
         t0 /= t3;
-        float q = (3.0f*t1 - t2*t2) / 9.0f;
-        float r = (9.0f*t2*t1 - 27.0f*t0 - 2.0f*t2*t2*t2) / 54.0f;
-        float q3 = q*q*q;
-        float delta = q3 + r*r;
-        if (delta > 0.0f) {
+        double q = (3.0*t1 - t2*t2) / 9.0;
+        double r = (9.0*t2*t1 - 27.0*t0 - 2.0*t2*t2*t2) / 54.0;
+        double delta = q*q*q + r*r;
+        if (delta > 1e-8f) {
             // only one real root - use Cardano's formula
             delta = sqrt(delta);
             q = cbrt(r + delta);
             r = cbrt(r - delta);
-            return q + r - t2 / 3.0f;
+            return q + r - t2 / 3.0;
         }
         else {
             // three real roots - use the trigonometric formula
-            float theta = acos(r / sqrt(-q3)) / 3.0f;
-            float c = 2.0f * sqrt(-q);
-            float x = c * cos(theta) - 1.0f / 3.0f;
-            float x1 = c * cos(theta + TWO_THIRD_PI) - 1.0f / 3.0f;
-            if (x1 >= 0.0f && x1 < x) {
+            q = min(q, 0.0);
+            double theta = acos(r / sqrt(-q*q*q)) / 3.0;
+            double c = 2.0 * sqrt(-q);
+            double x = c * cos(theta) - t2 / 3.0;
+            double x1 = c * cos(theta + TWO_THIRD_PI) - t2 / 3.0;
+            if (x1 >= EPS && x1 < x - EPS) {
                 x = x1;
             }
-            x1 = c * cos(theta + 2.0f * TWO_THIRD_PI) - 1.0f / 3.0f;
-            if (x1 >= 0.0f && x1 < x) {
+            x1 = c * cos(theta + 2.0 * TWO_THIRD_PI) - t2 / 3.0;
+            if (x1 >= EPS && x1 < x - EPS) {
                 x = x1;
             }
             return x;
         }
 
     }
-    else if (t2 != 0.0f) {
+    else if (abs(t2) > EPS) {
         // degree = 2
-        float delta = t1 * t1 - 4.0f * t2 * t0;
-        if (delta < 0.0f) {
+        double delta = t1 * t1 - 4.0 * t2 * t0;
+        if (delta < EPS) {
             // no solutions
-            return -1.0f;
+            return -1.0;
         }
         delta = sqrt(delta);
-        float x = (-t1 - delta) / (2.0f * t2);
-        if (x >= 0.0f) return x;
-        return (-t1 + delta) / (2.0f * t2);
+        double x = (-t1 - delta) / (2.0 * t2);
+        if (x >= EPS) return x;
+        return (-t1 + delta) / (2.0 * t2);
     }
-    else if (t1 != 0.0f) {
+    else if (abs(t1) > EPS) {
         // degree = 1
         return -t0 / t1;
     }
-    return -1.0f;
+    return -1.0;
 }
 
-__host__ __device__ glm::vec3 normal_vector_impl(const Coef& coef, const glm::vec3 &pos)
+__host__ __device__ glm::dvec3 normal_vector_impl(const Coef& coef, const glm::dvec3 &pos)
 {
-    glm::vec3 res = 3.0f * glm::vec3(coef.x3, coef.y3, coef.z3) * pos * pos
-            + 2.0f * glm::vec3(coef.x2, coef.y2, coef.z2) * pos
-            + glm::vec3(coef.x, coef.y, coef.z);
-    res.x += 2.0f * pos.x * (coef.x2y * pos.y + coef.x2z * pos.z)
+    glm::dvec3 res = 3.0 * glm::dvec3(coef.x3, coef.y3, coef.z3) * pos * pos
+            + 2.0 * glm::dvec3(coef.x2, coef.y2, coef.z2) * pos
+            + glm::dvec3(coef.x, coef.y, coef.z);
+    res.x += 2.0 * pos.x * (coef.x2y * pos.y + coef.x2z * pos.z)
             + pos.y * (coef.xy2 * pos.y + coef.xyz * pos.z + coef.xy)
             + pos.z * (coef.xz2 * pos.z + coef.xz);
-    res.y += 2.0f * pos.y * (coef.xy2 * pos.x + coef.y2z * pos.z)
+    res.y += 2.0 * pos.y * (coef.xy2 * pos.x + coef.y2z * pos.z)
             + pos.x * (coef.x2y * pos.x + coef.xyz * pos.z + coef.xy)
             + pos.z * (coef.yz2 * pos.z + coef.yz);
-    res.z += 2.0f * pos.z * (coef.xz2 * pos.x + coef.yz2 * pos.y)
+    res.z += 2.0 * pos.z * (coef.xz2 * pos.x + coef.yz2 * pos.y)
             + pos.x * (coef.x2z * pos.x + coef.xyz * pos.y + coef.xz)
             + pos.y * (coef.y2z * pos.y + coef.yz);
     return glm::normalize(res);
 }
 
-float intersect_ray(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
+double intersect_ray(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
     return intersect_ray_impl(coef, origin, dir);
 }
 
-glm::vec3 normal_vector(const Coef& coef, const glm::vec3 &pos)
+glm::dvec3 normal_vector(const Coef& coef, const glm::dvec3 &pos)
 {
     return normal_vector_impl(coef, pos);
 }
 
-__device__ float intersect_ray_cuda(const Coef& coef, const glm::vec3 &origin, const glm::vec3 &dir)
+__device__ double intersect_ray_cuda(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
     return intersect_ray_impl(coef, origin, dir);
 }
 
-__device__ glm::vec3 normal_vector_cuda(const Coef& coef, const glm::vec3 &pos)
+__device__ glm::dvec3 normal_vector_cuda(const Coef& coef, const glm::dvec3 &pos)
 {
     return normal_vector_impl(coef, pos);
 }
 
-Coef sphere(const glm::vec3 &center, float radius)
+Coef sphere(const glm::dvec3 &center, double radius)
 {
     Coef coef{};
-    coef.x2 = coef.y2 = coef.z2 = 1.0f;
-    coef.x = -2.0f * center.x;
-    coef.y = -2.0f * center.y;
-    coef.z = -2.0f * center.z;
+    coef.x2 = coef.y2 = coef.z2 = 1.0;
+    coef.x = -2.0 * center.x;
+    coef.y = -2.0 * center.y;
+    coef.z = -2.0 * center.z;
     coef.c = glm::dot(center, center) - radius * radius;
-    return { coef };
+    return coef;
 }
 
-Coef plane(const glm::vec3 &origin, const glm::vec3 &nv)
+Coef plane(const glm::dvec3 &origin, const glm::dvec3 &nv)
 {
     Coef coef{};
     coef.x = nv.x;
     coef.y = nv.y;
     coef.z = nv.z;
     coef.c = -glm::dot(origin, nv);
-    return { coef };
+    return coef;
 }
 
-Coef dingDong()
+Coef dingDong(const glm::dvec3& origin)
 {
     Coef coef{};
-    coef.x2 = coef.y2 = coef.z = 1.0f;
-    coef.z3 = -1.0f;
-    return { coef };
+    coef.x2 = coef.y2 = coef.z3 = 1.0;
+    coef.z2 = -1.0 - 3.0 * origin.z;
+    coef.x = -2.0 * origin.x;
+    coef.y = -2.0 * origin.y;
+    coef.z = (2.0 + 3.0 * origin.z) * origin.z;
+    coef.c = glm::pow(origin.x, 2)
+            + glm::pow(origin.y, 2)
+            - glm::pow(origin.z, 2) * (1.0 + origin.z);
+    return coef;
 }
 
 Coef clebsch()
 {
     Coef coef{};
-    coef.x3 = coef.y3 = coef.x3 = 81.0f;
-    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -189.0f;
-    coef.xyz = 54.0f;
-    coef.xy = coef.yz = coef.xz = 126.0f;
-    coef.x2 = coef.y2 = coef.z2 = -9.0f;
-    coef.x = coef.y = coef.z = 9.0f;
-    coef.c = 1.0f;
-    return { coef };
+    coef.x3 = coef.y3 = coef.x3 = 81.0;
+    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -189.0;
+    coef.xyz = 54.0;
+    coef.xy = coef.yz = coef.xz = 126.0;
+    coef.x2 = coef.y2 = coef.z2 = -9.0;
+    coef.x = coef.y = coef.z = 9.0;
+    coef.c = 1.0;
+    return coef;
 }
 
 Coef cayley()
 {
     Coef coef{};
-    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -5.0f;
-    coef.xy = coef.yz = coef.xz = 2.0f;
+    coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -5.0;
+    coef.xy = coef.yz = coef.xz = 2.0;
     return {coef};
 }
