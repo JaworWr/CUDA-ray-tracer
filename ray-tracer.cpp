@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <cstdio>
 #include <cstdlib>
-#include <fstream>
 #include "shader-program.h"
 #include "update.h"
 #include "scene.h"
@@ -43,7 +42,7 @@ int main(int argc, char *argv[])
     GLFWwindow *window = glfwCreateWindow(800, 600, "Ray tracer", nullptr, nullptr);
     if (window == nullptr)
     {
-        printf("Failed to create GLFW window\n");
+        fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
         return EXIT_FAILURE;
     }
@@ -52,15 +51,7 @@ int main(int argc, char *argv[])
 
     // initialize GLEW and load the shader program
     glewInit();
-    ShaderProgram program;
-    try {
-        program.init("ray-tracer.vert", "ray-tracer.frag");
-    }
-    catch (std::ifstream::failure &e) {
-        fprintf(stderr, "I/O error during program creation\n%s\n", e.what());
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
+    ShaderProgram program("ray-tracer.vert", "ray-tracer.frag");
 
     // initialize OpenGL objects
     unsigned int vbo;
