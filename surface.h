@@ -4,7 +4,7 @@
 #include <cuda.h>
 #include <glm/glm.hpp>
 
-const float EPS = 1e-8f;
+const double EPS = 1e-8;
 
 /*
  * Coefficients of a polynomial with a degree of at most 3

@@ -96,7 +96,7 @@ __host__ __device__ double intersect_ray_shared(const SurfaceCoefs* coef, const 
         double q = (3.0*t1 - t2*t2) / 9.0;
         double r = (9.0*t2*t1 - 27.0*t0 - 2.0*t2*t2*t2) / 54.0;
         double delta = q*q*q + r*r;
-        if (delta > 1e-8f) {
+        if (delta > 0) {
             // only one real root - use Cardano's formula
             delta = sqrt(delta);
             q = cbrt(r + delta);
@@ -105,16 +105,15 @@ __host__ __device__ double intersect_ray_shared(const SurfaceCoefs* coef, const 
         }
         else {
             // three real roots - use the trigonometric formula
-            q = min(q, 0.0);
             double theta = acos(r / sqrt(-q*q*q)) / 3.0;
             double c = 2.0 * sqrt(-q);
             double x = c * cos(theta) - t2 / 3.0;
             double x1 = c * cos(theta + TWO_THIRD_PI) - t2 / 3.0;
-            if (x1 >= EPS && x1 < x - EPS) {
+            if (x1 >= EPS && x1 < x) {
                 x = x1;
             }
             x1 = c * cos(theta + 2.0 * TWO_THIRD_PI) - t2 / 3.0;
-            if (x1 >= EPS && x1 < x - EPS) {
+            if (x1 >= EPS && x1 < x) {
                 x = x1;
             }
             return x;
@@ -124,7 +123,7 @@ __host__ __device__ double intersect_ray_shared(const SurfaceCoefs* coef, const 
     else if (abs(t2) > EPS) {
         // degree = 2
         double delta = t1 * t1 - 4.0 * t2 * t0;
-        if (delta < EPS) {
+        if (delta < 0) {
             // no solutions
             return -1.0;
         }
@@ -201,14 +200,14 @@ SurfaceCoefs SurfaceCoefs::plane(const glm::dvec3 &origin, const glm::dvec3 &nv)
 SurfaceCoefs SurfaceCoefs::dingDong(const glm::dvec3& origin)
 {
     SurfaceCoefs coef{};
-    coef.x2 = coef.y2 = coef.z3 = 1.0;
-    coef.z2 = -1.0 - 3.0 * origin.z;
+    coef.x2 = coef.y3 = coef.z2 = 1.0;
+    coef.y2 = -1.0 - 3.0 * origin.y;
     coef.x = -2.0 * origin.x;
-    coef.y = -2.0 * origin.y;
-    coef.z = (2.0 + 3.0 * origin.z) * origin.z;
+    coef.z = -2.0 * origin.z;
+    coef.y = (2.0 + 3.0 * origin.y) * origin.y;
     coef.c = glm::pow(origin.x, 2)
-            + glm::pow(origin.y, 2)
-            - glm::pow(origin.z, 2) * (1.0 + origin.z);
+            + glm::pow(origin.z, 2)
+            - glm::pow(origin.y, 2) * (1.0 + origin.y);
     return coef;
 }
 
