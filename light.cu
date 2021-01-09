@@ -6,7 +6,7 @@ LightSource LightSource::directional(float intensity, const glm::vec3 &dir, cons
     LightSource light{};
     light.is_spherical = false;
     light.color = intensity * color;
-    light.p = dir;
+    light.p = -glm::normalize(dir);
     return light;
 }
 

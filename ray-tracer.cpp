@@ -8,9 +8,9 @@
 
 float vertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
-         1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-         1.0f,  1.0f, 0.0f, 1.0f, 1.0f
+        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
 };
 
 int indices[] = {
@@ -18,7 +18,7 @@ int indices[] = {
         0, 2, 3
 };
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
@@ -40,8 +40,7 @@ int main(int argc, char *argv[])
 
     // create a window
     GLFWwindow *window = glfwCreateWindow(800, 600, "Ray tracer", nullptr, nullptr);
-    if (window == nullptr)
-    {
+    if (window == nullptr) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
         return EXIT_FAILURE;
@@ -77,11 +76,12 @@ int main(int argc, char *argv[])
     scene.objects.push_back({
                                     SurfaceCoefs::sphere(glm::dvec3(0, 0, 5), 1),
                                     glm::vec3(1.0f, 0.0f, 0.0f)
-    });
+                            });
     scene.objects.push_back({
                                     SurfaceCoefs::sphere(glm::dvec3(1, 1, 10), 1.5),
                                     glm::vec3(1.0f, 1.0f, 0.0f)
-    });
+                            });
+    scene.lights.push_back(LightSource::directional(2.0f, glm::vec3(-0.1f, 1.0f, 1.0f), glm::vec3(1.0f)));
 
     // texture creation and initialization
     unsigned int texture;

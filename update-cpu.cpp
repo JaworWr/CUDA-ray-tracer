@@ -8,6 +8,7 @@ int g_width, g_height;
 std::vector<float> g_data;
 double g_aspect_ratio, g_vertical_fov;
 std::vector<Object> g_objects;
+std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
 const glm::dvec3 RAY_ORIGIN(0.0f);
 
@@ -20,6 +21,7 @@ void init_update(unsigned int texture, const Scene& scene)
     g_aspect_ratio = scene.aspect_ratio();
     g_vertical_fov = tan(0.5 * scene.vertical_fov);
     g_objects = scene.objects;
+    g_lights = scene.lights;
     g_bg_color = scene.bg_color;
 
     // reserve space for the RGB data of the texture
@@ -33,7 +35,7 @@ void init_update(unsigned int texture, const Scene& scene)
     }
 }
 
-const glm::vec3& render_pixel(int pixel_x, int pixel_y)
+glm::vec3 render_pixel(int pixel_x, int pixel_y)
 {
     double ndc_x = (pixel_x + 0.5) / g_width;
     double ndc_y = (pixel_y + 0.5) / g_height;
@@ -52,7 +54,14 @@ const glm::vec3& render_pixel(int pixel_x, int pixel_y)
         }
     }
     if (best_idx >= 0) {
-        return g_objects[best_idx].color;
+        glm::vec3 result_color(0.0f);
+        auto surface_point = RAY_ORIGIN + best_t * dir;
+        auto surface_normal = g_objects[best_idx].surface.normal_vector(surface_point);
+        auto surface_color = g_objects[best_idx].color;
+        for (const LightSource& light : g_lights) {
+            result_color += light.surface_color(surface_point, surface_normal, surface_color);
+        }
+        return glm::min(glm::vec3(1.0f), result_color);
     }
     else {
         return g_bg_color;
