@@ -40,7 +40,7 @@ glm::vec3 render_pixel(int pixel_x, int pixel_y)
     double ndc_x = (pixel_x + 0.5) / g_width;
     double ndc_y = (pixel_y + 0.5) / g_height;
     double camera_x = (2.0 * ndc_x - 1.0) * g_aspect_ratio * g_vertical_fov;
-    double camera_y = (1.0 - 2.0 * ndc_y) * g_vertical_fov;
+    double camera_y = (2.0 * ndc_y - 1.0) * g_vertical_fov;
     glm::dvec3 dir(camera_x, camera_y, 1.0);
     dir = glm::normalize(dir);
 
