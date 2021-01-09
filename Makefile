@@ -14,16 +14,16 @@ OBJ          := ray-tracer.o shader-program.o surface.o scene.o
 OBJ_CPU      := $(OBJ) update-cpu.o
 OBJ_CUDA     := $(OBJ) update-cuda.o
 
-%.o: %.cpp
+%.o: %.cpp Makefile
 	$(CC) $(FLAGS) -c -o $@ $< $(INC)
 
-%.o: %.cu
-	$(NVCC) $(FLAGS) -c -o $@ $< $(INC)
+%.o: %.cu Makefile
+	$(NVCC) $(FLAGS) -dc -o $@ $< $(INC)
 
-ray-tracer-cpu: $(OBJ_CPU) $(HEADERS)
+ray-tracer-cpu: $(OBJ_CPU) $(HEADERS) Makefile
 	$(NVCC) -o $@ $(OBJ_CPU) $(LIB_CUDA)
 
-ray-tracer-cuda: $(OBJ_CUDA) $(HEADERS_CUDA)
+ray-tracer-cuda: $(OBJ_CUDA) $(HEADERS_CUDA) Makefile
 	$(NVCC) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
 
 clean:

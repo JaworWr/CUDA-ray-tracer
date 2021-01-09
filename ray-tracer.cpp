@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(1);
 
     // example scene
-    Scene scene(800, 600, 160.0f, glm::vec3(0.0f, 0.1f, 0.2f));
+    Scene scene(800, 600, 45.0f, glm::vec3(0.0f, 0.1f, 0.2f));
     scene.objects.push_back({
             sphere(glm::dvec3(0, 0, 5), 1),
             glm::vec3(1.0f, 0.0f, 0.0f)

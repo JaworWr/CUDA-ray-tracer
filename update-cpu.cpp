@@ -1,5 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <cstdio>
 #include "update.h"
 
 unsigned int g_texture;

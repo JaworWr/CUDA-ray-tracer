@@ -3,7 +3,7 @@
 
 const double TWO_THIRD_PI = M_PI * 2.0 / 3.0;
 
-__host__ __device__ double intersect_ray_impl(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+__host__ __device__ double intersect_ray_shared(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
     // some helper macros for calculating coefficients
     // the easy coefficients
@@ -140,7 +140,7 @@ __host__ __device__ double intersect_ray_impl(const Coef& coef, const glm::dvec3
     return -1.0;
 }
 
-__host__ __device__ glm::dvec3 normal_vector_impl(const Coef& coef, const glm::dvec3 &pos)
+__host__ __device__ glm::dvec3 normal_vector_shared(Coef coef, const glm::dvec3 &pos)
 {
     glm::dvec3 res = 3.0 * glm::dvec3(coef.x3, coef.y3, coef.z3) * pos * pos
             + 2.0 * glm::dvec3(coef.x2, coef.y2, coef.z2) * pos
@@ -157,24 +157,24 @@ __host__ __device__ glm::dvec3 normal_vector_impl(const Coef& coef, const glm::d
     return glm::normalize(res);
 }
 
-double intersect_ray(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+double intersect_ray(Coef coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
-    return intersect_ray_impl(coef, origin, dir);
+    return intersect_ray_shared(coef, origin, dir);
 }
 
-glm::dvec3 normal_vector(const Coef& coef, const glm::dvec3 &pos)
+__device__ double intersect_ray_cuda(Coef coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
-    return normal_vector_impl(coef, pos);
+    return intersect_ray_shared(coef, origin, dir);
 }
 
-__device__ double intersect_ray_cuda(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+glm::dvec3 normal_vector(const Coef &coef, const glm::dvec3 &pos)
 {
-    return intersect_ray_impl(coef, origin, dir);
+    return normal_vector_shared(coef, pos);
 }
 
-__device__ glm::dvec3 normal_vector_cuda(const Coef& coef, const glm::dvec3 &pos)
+__device__ glm::dvec3 normal_vector_cuda(const Coef &coef, const glm::dvec3 &pos)
 {
-    return normal_vector_impl(coef, pos);
+    return normal_vector_shared(coef, pos);
 }
 
 Coef sphere(const glm::dvec3 &center, double radius)
