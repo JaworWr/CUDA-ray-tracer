@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
     // example scene
     Scene scene(800, 600, 45.0f, glm::vec3(0.0f, 0.1f, 0.2f));
     scene.objects.push_back({
-            sphere(glm::dvec3(0, 0, 5), 1),
-            glm::vec3(1.0f, 0.0f, 0.0f)
+                                    SurfaceCoefs::sphere(glm::dvec3(0, 0, 5), 1),
+                                    glm::vec3(1.0f, 0.0f, 0.0f)
     });
     scene.objects.push_back({
-            sphere(glm::dvec3(1, 1, 10), 1.5),
-            glm::vec3(1.0f, 1.0f, 0.0f)
+                                    SurfaceCoefs::sphere(glm::dvec3(1, 1, 10), 1.5),
+                                    glm::vec3(1.0f, 1.0f, 0.0f)
     });
 
     // texture creation and initialization

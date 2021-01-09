@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <glm/gtc/integer.hpp>
 #include "helper_cuda_opengl.h"
-#include "surface.h"
 #include "update.h"
 
 cudaGraphicsResource_t resource;
@@ -64,7 +63,7 @@ __global__ void update_kernel(Object *d_objects, cudaSurfaceObject_t d_surfaceOb
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < d_n_objects; i++) {
-        double t = intersect_ray_cuda(d_objects[i].surface, d_ray_origin, dir);
+        double t = d_objects[i].surface.intersect_ray_cuda(d_ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;

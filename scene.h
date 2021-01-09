@@ -6,7 +6,7 @@
 
 struct Object
 {
-    Coef surface;
+    SurfaceCoefs surface;
     glm::vec3 color;
 };
 

@@ -3,7 +3,7 @@
 
 const double TWO_THIRD_PI = M_PI * 2.0 / 3.0;
 
-__host__ __device__ double intersect_ray_shared(const Coef& coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+__host__ __device__ double intersect_ray_shared(const SurfaceCoefs* coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {
     // some helper macros for calculating coefficients
     // the easy coefficients
@@ -26,66 +26,66 @@ __host__ __device__ double intersect_ray_shared(const Coef& coef, const glm::dve
 #define COEF_1_11(x, y) (origin.x * dir.y + dir.x * origin.y)
 
     // coefficients of the polynomial
-    double t3 = coef.x3 * COEF_3(x, x, x)
-            + coef.y3 * COEF_3(y, y, y)
-            + coef.z3 * COEF_3(z, z, z)
-            + coef.x2y * COEF_3(x, x, y)
-            + coef.xy2 * COEF_3(x, y, y)
-            + coef.x2z * COEF_3(x, x, z)
-            + coef.xz2 * COEF_3(x, z, z)
-            + coef.y2z * COEF_3(y, y, z)
-            + coef.yz2 * COEF_3(y, z, z)
-            + coef.xyz * COEF_3(x, y, z);
-    double t2 = coef.x3 * COEF_2_3(x)
-            + coef.y3 * COEF_2_3(y)
-            + coef.z3 * COEF_2_3(z)
-            + coef.x2y * COEF_2_21(x, y)
-            + coef.xy2 * COEF_2_21(y, x)
-            + coef.x2z * COEF_2_21(x, z)
-            + coef.xz2 * COEF_2_21(z, x)
-            + coef.y2z * COEF_2_21(y, z)
-            + coef.yz2 * COEF_2_21(z, y)
-            + coef.xyz * COEF_2_111(x, y, z)
-            + coef.x2 * COEF_2(x, x)
-            + coef.y2 * COEF_2(y, y)
-            + coef.z2 * COEF_2(z, z)
-            + coef.xy * COEF_2(x, y)
-            + coef.xz * COEF_2(x, z)
-            + coef.yz * COEF_2(y, z);
-    double t1 = coef.x3 * COEF_1_3(x)
-            + coef.y3 * COEF_1_3(y)
-            + coef.z3 * COEF_1_3(z)
-            + coef.x2y * COEF_1_21(x, y)
-            + coef.xy2 * COEF_1_21(y, x)
-            + coef.x2z * COEF_1_21(x, z)
-            + coef.xz2 * COEF_1_21(z, x)
-            + coef.y2z * COEF_1_21(y, z)
-            + coef.yz2 * COEF_1_21(z, y)
-            + coef.xyz * COEF_1_111(x, y, z)
-            + coef.x2 * COEF_1_2(x)
-            + coef.y2 * COEF_1_2(y)
-            + coef.z2 * COEF_1_2(z)
-            + coef.xy * COEF_1_11(x, y)
-            + coef.xz * COEF_1_11(x, z)
-            + coef.yz * COEF_1_11(y, z)
-            + coef.x * dir.x + coef.y * dir.y + coef.z * dir.z;
-    double t0 = coef.x3 * COEF_0_3(x, x, x)
-            + coef.y3 * COEF_0_3(y, y, y)
-            + coef.z3 * COEF_0_3(z, z, z)
-            + coef.x2y * COEF_0_3(x, x, y)
-            + coef.xy2 * COEF_0_3(x, y, y)
-            + coef.x2z * COEF_0_3(x, x, z)
-            + coef.xz2 * COEF_0_3(x, z, z)
-            + coef.y2z * COEF_0_3(y, y, z)
-            + coef.yz2 * COEF_0_3(y, z, z)
-            + coef.xyz * COEF_0_3(x, y, z)
-            + coef.x2 * COEF_0_2(x, x)
-            + coef.y2 * COEF_0_2(y, y)
-            + coef.z2 * COEF_0_2(z, z)
-            + coef.xy * COEF_0_2(x, y)
-            + coef.xz * COEF_0_2(x, z)
-            + coef.yz * COEF_0_2(y, z)
-            + coef.x * origin.x + coef.y * origin.y + coef.z * origin.z + coef.c;
+    double t3 = coef->x3 * COEF_3(x, x, x)
+            + coef->y3 * COEF_3(y, y, y)
+            + coef->z3 * COEF_3(z, z, z)
+            + coef->x2y * COEF_3(x, x, y)
+            + coef->xy2 * COEF_3(x, y, y)
+            + coef->x2z * COEF_3(x, x, z)
+            + coef->xz2 * COEF_3(x, z, z)
+            + coef->y2z * COEF_3(y, y, z)
+            + coef->yz2 * COEF_3(y, z, z)
+            + coef->xyz * COEF_3(x, y, z);
+    double t2 = coef->x3 * COEF_2_3(x)
+            + coef->y3 * COEF_2_3(y)
+            + coef->z3 * COEF_2_3(z)
+            + coef->x2y * COEF_2_21(x, y)
+            + coef->xy2 * COEF_2_21(y, x)
+            + coef->x2z * COEF_2_21(x, z)
+            + coef->xz2 * COEF_2_21(z, x)
+            + coef->y2z * COEF_2_21(y, z)
+            + coef->yz2 * COEF_2_21(z, y)
+            + coef->xyz * COEF_2_111(x, y, z)
+            + coef->x2 * COEF_2(x, x)
+            + coef->y2 * COEF_2(y, y)
+            + coef->z2 * COEF_2(z, z)
+            + coef->xy * COEF_2(x, y)
+            + coef->xz * COEF_2(x, z)
+            + coef->yz * COEF_2(y, z);
+    double t1 = coef->x3 * COEF_1_3(x)
+            + coef->y3 * COEF_1_3(y)
+            + coef->z3 * COEF_1_3(z)
+            + coef->x2y * COEF_1_21(x, y)
+            + coef->xy2 * COEF_1_21(y, x)
+            + coef->x2z * COEF_1_21(x, z)
+            + coef->xz2 * COEF_1_21(z, x)
+            + coef->y2z * COEF_1_21(y, z)
+            + coef->yz2 * COEF_1_21(z, y)
+            + coef->xyz * COEF_1_111(x, y, z)
+            + coef->x2 * COEF_1_2(x)
+            + coef->y2 * COEF_1_2(y)
+            + coef->z2 * COEF_1_2(z)
+            + coef->xy * COEF_1_11(x, y)
+            + coef->xz * COEF_1_11(x, z)
+            + coef->yz * COEF_1_11(y, z)
+            + coef->x * dir.x + coef->y * dir.y + coef->z * dir.z;
+    double t0 = coef->x3 * COEF_0_3(x, x, x)
+            + coef->y3 * COEF_0_3(y, y, y)
+            + coef->z3 * COEF_0_3(z, z, z)
+            + coef->x2y * COEF_0_3(x, x, y)
+            + coef->xy2 * COEF_0_3(x, y, y)
+            + coef->x2z * COEF_0_3(x, x, z)
+            + coef->xz2 * COEF_0_3(x, z, z)
+            + coef->y2z * COEF_0_3(y, y, z)
+            + coef->yz2 * COEF_0_3(y, z, z)
+            + coef->xyz * COEF_0_3(x, y, z)
+            + coef->x2 * COEF_0_2(x, x)
+            + coef->y2 * COEF_0_2(y, y)
+            + coef->z2 * COEF_0_2(z, z)
+            + coef->xy * COEF_0_2(x, y)
+            + coef->xz * COEF_0_2(x, z)
+            + coef->yz * COEF_0_2(y, z)
+            + coef->x * origin.x + coef->y * origin.y + coef->z * origin.z + coef->c;
 
     // find the roots of the polynomial
     if (abs(t3) > EPS) {
@@ -140,46 +140,46 @@ __host__ __device__ double intersect_ray_shared(const Coef& coef, const glm::dve
     return -1.0;
 }
 
-__host__ __device__ glm::dvec3 normal_vector_shared(Coef coef, const glm::dvec3 &pos)
+__host__ __device__ glm::dvec3 normal_vector_shared(const SurfaceCoefs* coef, const glm::dvec3 &pos)
 {
-    glm::dvec3 res = 3.0 * glm::dvec3(coef.x3, coef.y3, coef.z3) * pos * pos
-            + 2.0 * glm::dvec3(coef.x2, coef.y2, coef.z2) * pos
-            + glm::dvec3(coef.x, coef.y, coef.z);
-    res.x += 2.0 * pos.x * (coef.x2y * pos.y + coef.x2z * pos.z)
-            + pos.y * (coef.xy2 * pos.y + coef.xyz * pos.z + coef.xy)
-            + pos.z * (coef.xz2 * pos.z + coef.xz);
-    res.y += 2.0 * pos.y * (coef.xy2 * pos.x + coef.y2z * pos.z)
-            + pos.x * (coef.x2y * pos.x + coef.xyz * pos.z + coef.xy)
-            + pos.z * (coef.yz2 * pos.z + coef.yz);
-    res.z += 2.0 * pos.z * (coef.xz2 * pos.x + coef.yz2 * pos.y)
-            + pos.x * (coef.x2z * pos.x + coef.xyz * pos.y + coef.xz)
-            + pos.y * (coef.y2z * pos.y + coef.yz);
+    glm::dvec3 res = 3.0 * glm::dvec3(coef->x3, coef->y3, coef->z3) * pos * pos
+            + 2.0 * glm::dvec3(coef->x2, coef->y2, coef->z2) * pos
+            + glm::dvec3(coef->x, coef->y, coef->z);
+    res.x += 2.0 * pos.x * (coef->x2y * pos.y + coef->x2z * pos.z)
+            + pos.y * (coef->xy2 * pos.y + coef->xyz * pos.z + coef->xy)
+            + pos.z * (coef->xz2 * pos.z + coef->xz);
+    res.y += 2.0 * pos.y * (coef->xy2 * pos.x + coef->y2z * pos.z)
+            + pos.x * (coef->x2y * pos.x + coef->xyz * pos.z + coef->xy)
+            + pos.z * (coef->yz2 * pos.z + coef->yz);
+    res.z += 2.0 * pos.z * (coef->xz2 * pos.x + coef->yz2 * pos.y)
+            + pos.x * (coef->x2z * pos.x + coef->xyz * pos.y + coef->xz)
+            + pos.y * (coef->y2z * pos.y + coef->yz);
     return glm::normalize(res);
 }
 
-double intersect_ray(Coef coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+double SurfaceCoefs::intersect_ray(const glm::dvec3 &origin, const glm::dvec3 &dir) const
 {
-    return intersect_ray_shared(coef, origin, dir);
+    return intersect_ray_shared(this, origin, dir);
 }
 
-__device__ double intersect_ray_cuda(Coef coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
+__device__ double SurfaceCoefs::intersect_ray_cuda(const glm::dvec3 &origin, const glm::dvec3 &dir) const
 {
-    return intersect_ray_shared(coef, origin, dir);
+    return intersect_ray_shared(this, origin, dir);
 }
 
-glm::dvec3 normal_vector(const Coef &coef, const glm::dvec3 &pos)
+glm::dvec3 SurfaceCoefs::normal_vector(const glm::dvec3 &pos) const
 {
-    return normal_vector_shared(coef, pos);
+    return normal_vector_shared(this, pos);
 }
 
-__device__ glm::dvec3 normal_vector_cuda(const Coef &coef, const glm::dvec3 &pos)
+__device__ glm::dvec3 SurfaceCoefs::normal_vector_cuda(const glm::dvec3 &pos) const
 {
-    return normal_vector_shared(coef, pos);
+    return normal_vector_shared(this, pos);
 }
 
-Coef sphere(const glm::dvec3 &center, double radius)
+SurfaceCoefs SurfaceCoefs::sphere(const glm::dvec3 &center, double radius)
 {
-    Coef coef{};
+    SurfaceCoefs coef{};
     coef.x2 = coef.y2 = coef.z2 = 1.0;
     coef.x = -2.0 * center.x;
     coef.y = -2.0 * center.y;
@@ -188,9 +188,9 @@ Coef sphere(const glm::dvec3 &center, double radius)
     return coef;
 }
 
-Coef plane(const glm::dvec3 &origin, const glm::dvec3 &nv)
+SurfaceCoefs SurfaceCoefs::plane(const glm::dvec3 &origin, const glm::dvec3 &nv)
 {
-    Coef coef{};
+    SurfaceCoefs coef{};
     coef.x = nv.x;
     coef.y = nv.y;
     coef.z = nv.z;
@@ -198,9 +198,9 @@ Coef plane(const glm::dvec3 &origin, const glm::dvec3 &nv)
     return coef;
 }
 
-Coef dingDong(const glm::dvec3& origin)
+SurfaceCoefs SurfaceCoefs::dingDong(const glm::dvec3& origin)
 {
-    Coef coef{};
+    SurfaceCoefs coef{};
     coef.x2 = coef.y2 = coef.z3 = 1.0;
     coef.z2 = -1.0 - 3.0 * origin.z;
     coef.x = -2.0 * origin.x;
@@ -212,9 +212,9 @@ Coef dingDong(const glm::dvec3& origin)
     return coef;
 }
 
-Coef clebsch()
+SurfaceCoefs SurfaceCoefs::clebsch()
 {
-    Coef coef{};
+    SurfaceCoefs coef{};
     coef.x3 = coef.y3 = coef.x3 = 81.0;
     coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -189.0;
     coef.xyz = 54.0;
@@ -225,9 +225,9 @@ Coef clebsch()
     return coef;
 }
 
-Coef cayley()
+SurfaceCoefs SurfaceCoefs::cayley()
 {
-    Coef coef{};
+    SurfaceCoefs coef{};
     coef.x2y = coef.x2z = coef.xy2 = coef.y2z = coef.xz2 = coef.yz2 = -5.0;
     coef.xy = coef.yz = coef.xz = 2.0;
     return {coef};

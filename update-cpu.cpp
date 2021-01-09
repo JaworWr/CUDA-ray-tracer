@@ -45,7 +45,7 @@ const glm::vec3& render_pixel(int pixel_x, int pixel_y)
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
-        double t = intersect_ray(g_objects[i].surface, RAY_ORIGIN, dir);
+        double t = g_objects[i].surface.intersect_ray(RAY_ORIGIN, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
