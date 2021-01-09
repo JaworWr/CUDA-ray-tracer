@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "surface.h"
+#include "light.h"
 
 struct Object
 {
@@ -17,6 +18,7 @@ struct Scene
     glm::vec3 bg_color;
 
     std::vector<Object> objects;
+    std::vector<LightSource> lights;
 
     Scene(int px_width, int px_height, double vertical_fov_deg, const glm::vec3& bg_color = glm::vec3(0.0f));
     double aspect_ratio() const { return (double) px_width / px_height; }

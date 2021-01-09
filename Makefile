@@ -8,9 +8,9 @@ INC       := -I$(CUDA_HOME)/include -I.
 
 all: ray-tracer-cpu ray-tracer-cuda
 
-HEADERS      := shader-program.h update.h surface.h scene.h
+HEADERS      := shader-program.h update.h surface.h light.h scene.h
 HEADERS_CUDA := $(HEADERS) helper_cuda_opengl.h
-OBJ          := ray-tracer.o shader-program.o surface.o scene.o
+OBJ          := ray-tracer.o shader-program.o surface.o light.o scene.o
 OBJ_CPU      := $(OBJ) update-cpu.o
 OBJ_CUDA     := $(OBJ) update-cuda.o
 
