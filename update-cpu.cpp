@@ -59,8 +59,9 @@ const glm::vec3& render_pixel(int pixel_x, int pixel_y)
     }
 }
 
-void update()
+float update()
 {
+    auto start_time = glfwGetTime();
     for (int y = 0; y < g_height; y++) {
         for (int x = 0; x < g_width; x++) {
             auto c = render_pixel(x, y);
@@ -70,7 +71,9 @@ void update()
             g_data[3 * idx + 2] = c.b;
         }
     }
+    auto elapsed = glfwGetTime() - start_time;
 
     glBindTexture(GL_TEXTURE_2D, g_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, g_width, g_height, 0, GL_RGB, GL_FLOAT, &g_data[0]);
+    return elapsed * 1000.0f;
 }

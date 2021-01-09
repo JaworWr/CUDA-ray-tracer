@@ -4,6 +4,6 @@
 #include "scene.h"
 
 void init_update(unsigned int texture, const Scene& scene);
-void update();
+float update();
 
 #endif //CUDA_RAY_TRACER_UPDATE_H

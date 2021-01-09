@@ -97,7 +97,8 @@ int main(int argc, char *argv[])
     auto start_time = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         process_inputs(window);
-        update();
+
+        float render_time = update();
         program.use();
         glBindVertexArray(vao);
 
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
         frames++;
         auto elapsed = glfwGetTime() - start_time;
         if (elapsed >= 1.0) {
-            printf("FPS: %lf\n", frames / elapsed);
+            printf("FPS: %.4lf, last render time: %.4f ms\n", frames / elapsed, render_time);
             frames = 0;
             start_time = glfwGetTime();
         }

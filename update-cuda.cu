@@ -20,6 +20,8 @@ __constant__ size_t d_n_objects;
 const glm::dvec3 RAY_ORIGIN(0.0f);
 __constant__ glm::dvec3 d_ray_origin;
 
+cudaEvent_t start, end;
+
 size_t idiv(size_t a, size_t b) {
     return a % b == 0 ? a / b : a / b + 1;
 }
@@ -46,6 +48,9 @@ void init_update(unsigned int texture, const Scene& scene)
     checkCudaErrors( cudaMemcpyToSymbol(d_ray_origin, &RAY_ORIGIN, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice) );
 
     checkCudaErrors( cudaGraphicsGLRegisterImage(&resource, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone) );
+
+    checkCudaErrors( cudaEventCreate(&start) );
+    checkCudaErrors( cudaEventCreate(&end) );
 }
 
 __global__ void update_kernel(Object *d_objects, cudaSurfaceObject_t d_surfaceObject)
@@ -88,7 +93,7 @@ __global__ void update_kernel(Object *d_objects, cudaSurfaceObject_t d_surfaceOb
     }
 }
 
-void update()
+float update()
 {
     dim3 blockSize(16, 16);
     dim3 gridSize(idiv(h_width, 16), idiv(h_height, 16));
@@ -104,10 +109,16 @@ void update()
     cudaSurfaceObject_t surface_object;
     checkCudaErrors( cudaCreateSurfaceObject(&surface_object, &resource_desc) );
 
+    cudaEventRecord(start);
     update_kernel<<<gridSize, blockSize>>>(d_objects, surface_object);
+    cudaEventRecord(end);
+    cudaEventSynchronize(end);
     getLastCudaError("update_kernel error");
 
     checkCudaErrors( cudaDestroySurfaceObject(surface_object) );
     checkCudaErrors( cudaGraphicsUnmapResources(1, &resource) );
     checkCudaErrors( cudaDeviceSynchronize() );
+    float ms;
+    cudaEventElapsedTime(&ms, start, end);
+    return ms;
 }
