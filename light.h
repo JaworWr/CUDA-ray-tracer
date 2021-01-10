@@ -28,7 +28,7 @@ public:
 private:
     bool is_spherical;
     glm::dvec3 p;
-    glm::vec3 color;
+    glm::vec3 light_color;
 };
 
 #endif //CUDA_RAY_TRACER_LIGHT_H
