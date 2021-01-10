@@ -4,8 +4,6 @@
 #include <cuda.h>
 #include <glm/glm.hpp>
 
-const double EPS = 1e-8;
-
 /*
  * Coefficients of a polynomial with a degree of at most 3
  * For convienicence the degree 3 and 1 coefficients are stored in vectors, eg. the coefficient by x^2y is x2.y

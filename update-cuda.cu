@@ -15,18 +15,20 @@ Object *d_objects;
 __constant__ size_t d_n_objects;
 LightSource *d_lights;
 __constant__ size_t d_n_lights;
+const double EPS = 1e-8;
 const double SHADOW_BIAS = 1e-2;
 
-const glm::dvec3 RAY_ORIGIN(0.0f);
-__constant__ glm::dvec3 d_ray_origin;
+const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
+__constant__ glm::dvec4 d_ray_origin;
 
 cudaEvent_t start, end;
 
-size_t idiv(size_t a, size_t b) {
+size_t idiv(size_t a, size_t b)
+{
     return a % b == 0 ? a / b : a / b + 1;
 }
 
-void init_update(unsigned int texture, const Scene& scene)
+void init_update(unsigned int texture, const Scene &scene)
 {
     h_width = scene.px_width;
     h_height = scene.px_height;
@@ -35,29 +37,30 @@ void init_update(unsigned int texture, const Scene& scene)
     auto h_bg_color = glm::iround(scene.bg_color * 255.0f);
 
     size_t h_n_objects = scene.objects.size();
-    checkCudaErrors( cudaMalloc(&d_objects, h_n_objects * sizeof(Object)) );
-    checkCudaErrors( cudaMemcpy(d_objects, &scene.objects[0], h_n_objects * sizeof(Object), cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_n_objects, &h_n_objects, sizeof(size_t), 0, cudaMemcpyHostToDevice) );
+    checkCudaErrors(cudaMalloc(&d_objects, h_n_objects * sizeof(Object)));
+    checkCudaErrors(cudaMemcpy(d_objects, &scene.objects[0], h_n_objects * sizeof(Object), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_n_objects, &h_n_objects, sizeof(size_t), 0, cudaMemcpyHostToDevice));
 
     size_t h_n_lights = scene.lights.size();
-    checkCudaErrors( cudaMalloc(&d_lights, h_n_lights * sizeof(LightSource)) );
-    checkCudaErrors( cudaMemcpy(d_lights, &scene.lights[0], h_n_lights * sizeof(LightSource), cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_n_lights, &h_n_lights, sizeof(size_t), 0, cudaMemcpyHostToDevice) );
+    checkCudaErrors(cudaMalloc(&d_lights, h_n_lights * sizeof(LightSource)));
+    checkCudaErrors(cudaMemcpy(d_lights, &scene.lights[0], h_n_lights * sizeof(LightSource), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_n_lights, &h_n_lights, sizeof(size_t), 0, cudaMemcpyHostToDevice));
 
-    checkCudaErrors( cudaMemcpyToSymbol(d_width, &h_width, sizeof(size_t), 0, cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_height, &h_height, sizeof(size_t), 0, cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_aspect_ratio, &h_aspect_ratio, sizeof(double), 0, cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_vertical_fov, &h_vertical_fov, sizeof(double), 0, cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_bg_color, &h_bg_color, sizeof(glm::ivec3), 0, cudaMemcpyHostToDevice) );
-    checkCudaErrors( cudaMemcpyToSymbol(d_ray_origin, &RAY_ORIGIN, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice) );
+    checkCudaErrors(cudaMemcpyToSymbol(d_width, &h_width, sizeof(size_t), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_height, &h_height, sizeof(size_t), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_aspect_ratio, &h_aspect_ratio, sizeof(double), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_vertical_fov, &h_vertical_fov, sizeof(double), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_bg_color, &h_bg_color, sizeof(glm::ivec3), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_ray_origin, &RAY_ORIGIN, sizeof(glm::dvec4), 0, cudaMemcpyHostToDevice));
 
-    checkCudaErrors( cudaGraphicsGLRegisterImage(&resource, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone) );
+    checkCudaErrors(cudaGraphicsGLRegisterImage(&resource, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone));
 
-    checkCudaErrors( cudaEventCreate(&start) );
-    checkCudaErrors( cudaEventCreate(&end) );
+    checkCudaErrors(cudaEventCreate(&start));
+    checkCudaErrors(cudaEventCreate(&end));
 }
 
-__global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceObject)
+__global__ void
+update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceObject, glm::dmat4 camera_matrix)
 {
     size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
     size_t ty = blockIdx.y * blockDim.y + threadIdx.y;
@@ -67,12 +70,13 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
     double camera_x = (2.0 * ndc_x - 1.0) * d_aspect_ratio * d_vertical_fov;
     double camera_y = (2.0 * ndc_y - 1.0) * d_vertical_fov;
     glm::dvec3 dir(camera_x, camera_y, 1.0);
-    dir = glm::normalize(dir);
+    glm::dvec3 ray_origin = glm::dvec3(camera_matrix * d_ray_origin);
+    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - ray_origin);
 
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < d_n_objects; i++) {
-        double t = objects[i].surface.intersect_ray_cuda(d_ray_origin, dir);
+        double t = objects[i].surface.intersect_ray_cuda(ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
@@ -81,7 +85,7 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
     glm::ivec3 output_color;
     if (best_idx >= 0) {
         glm::vec3 result_color(0.0f);
-        auto surface_point = d_ray_origin + best_t * dir;
+        auto surface_point = ray_origin + best_t * dir;
         auto surface_normal = objects[best_idx].surface.normal_vector_cuda(surface_point);
         auto surface_color = objects[best_idx].color;
         for (int j = 0; j < d_n_lights; j++) {
@@ -89,7 +93,8 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
             auto shadow_dir = lights[j].shadow_ray_cuda(surface_point, max_t);
             bool in_shadow = false;
             for (int k = 0; k < d_n_objects; k++) {
-                double t = objects[k].surface.intersect_ray_cuda(surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
+                double t = objects[k].surface.intersect_ray_cuda(surface_point + SHADOW_BIAS * surface_normal,
+                                                                 shadow_dir);
                 if (t > EPS && t < max_t) {
                     in_shadow = true;
                     break;
@@ -100,8 +105,7 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
             }
         }
         output_color = glm::iround(glm::min(glm::vec3(1.0f), result_color) * 255.0f);
-    }
-    else {
+    } else {
         output_color = d_bg_color;
     }
 
@@ -116,31 +120,31 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
     }
 }
 
-float update()
+float update(const glm::dmat4 &camera_matrix)
 {
     dim3 blockSize(16, 16);
     dim3 gridSize(idiv(h_width, 16), idiv(h_height, 16));
 
     cudaArray_t array;
-    checkCudaErrors( cudaGraphicsMapResources(1, &resource) );
-    checkCudaErrors( cudaGraphicsSubResourceGetMappedArray(&array, resource, 0, 0) );
+    checkCudaErrors(cudaGraphicsMapResources(1, &resource));
+    checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&array, resource, 0, 0));
 
     cudaResourceDesc resource_desc = {};
     resource_desc.resType = cudaResourceTypeArray;
     resource_desc.res.array.array = array;
 
     cudaSurfaceObject_t surface_object;
-    checkCudaErrors( cudaCreateSurfaceObject(&surface_object, &resource_desc) );
+    checkCudaErrors(cudaCreateSurfaceObject(&surface_object, &resource_desc));
 
     cudaEventRecord(start);
-    update_kernel<<<gridSize, blockSize>>>(d_objects, d_lights, surface_object);
+    update_kernel<<<gridSize, blockSize>>>(d_objects, d_lights, surface_object, camera_matrix);
     cudaEventRecord(end);
     cudaEventSynchronize(end);
     getLastCudaError("update_kernel error");
 
-    checkCudaErrors( cudaDestroySurfaceObject(surface_object) );
-    checkCudaErrors( cudaGraphicsUnmapResources(1, &resource) );
-    checkCudaErrors( cudaDeviceSynchronize() );
+    checkCudaErrors(cudaDestroySurfaceObject(surface_object));
+    checkCudaErrors(cudaGraphicsUnmapResources(1, &resource));
+    checkCudaErrors(cudaDeviceSynchronize());
     float ms;
     cudaEventElapsedTime(&ms, start, end);
     return ms;

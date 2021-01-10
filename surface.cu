@@ -1,5 +1,6 @@
 #include "surface.h"
 
+const double EPS = 1e-7;
 
 const double TWO_THIRD_PI = M_PI * 2.0 / 3.0;
 

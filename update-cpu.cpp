@@ -10,7 +10,9 @@ double g_aspect_ratio, g_vertical_fov;
 std::vector<Object> g_objects;
 std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
-const glm::dvec3 RAY_ORIGIN(0.0f);
+const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
+glm::dvec3 ray_origin;
+const double EPS = 1e-8;
 const double SHADOW_BIAS = 1e-2;
 
 
@@ -36,19 +38,19 @@ void init_update(unsigned int texture, const Scene& scene)
     }
 }
 
-glm::vec3 render_pixel(int pixel_x, int pixel_y)
+glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y)
 {
     double ndc_x = (pixel_x + 0.5) / g_width;
     double ndc_y = (pixel_y + 0.5) / g_height;
     double camera_x = (2.0 * ndc_x - 1.0) * g_aspect_ratio * g_vertical_fov;
     double camera_y = (2.0 * ndc_y - 1.0) * g_vertical_fov;
     glm::dvec3 dir(camera_x, camera_y, 1.0);
-    dir = glm::normalize(dir);
+    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - ray_origin);
 
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
-        double t = g_objects[i].surface.intersect_ray(RAY_ORIGIN, dir);
+        double t = g_objects[i].surface.intersect_ray(ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
@@ -56,7 +58,7 @@ glm::vec3 render_pixel(int pixel_x, int pixel_y)
     }
     if (best_idx >= 0) {
         glm::vec3 result_color(0.0f);
-        auto surface_point = RAY_ORIGIN + best_t * dir;
+        auto surface_point = ray_origin + best_t * dir;
         auto surface_normal = g_objects[best_idx].surface.normal_vector(surface_point);
         auto surface_color = g_objects[best_idx].color;
         for (const LightSource& light : g_lights) {
@@ -81,12 +83,13 @@ glm::vec3 render_pixel(int pixel_x, int pixel_y)
     }
 }
 
-float update()
+float update(const glm::dmat4& camera_matrix)
 {
+    ray_origin = camera_matrix * RAY_ORIGIN;
     auto start_time = glfwGetTime();
     for (int y = 0; y < g_height; y++) {
         for (int x = 0; x < g_width; x++) {
-            auto c = render_pixel(x, y);
+            auto c = render_pixel(camera_matrix, x, y);
             size_t idx = y * g_width + x;
             g_data[3 * idx] = c.r;
             g_data[3 * idx + 1] = c.g;
