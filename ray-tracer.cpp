@@ -73,26 +73,25 @@ int main(int argc, char *argv[])
 
     // example scene
     Scene scene(800, 600, 45.0f, glm::vec3(0.0f, 0.1f, 0.2f));
-//    scene.objects.push_back({
-//                                    SurfaceCoefs::sphere(glm::dvec3(0, 0, 5), 1),
-//                                    glm::vec3(0.8f, 0.3f, 0.3f)
-//                            });
-//    scene.objects.push_back({
-//                                    SurfaceCoefs::sphere(glm::dvec3(1.5, 1, 10), 1.5),
-//                                    glm::vec3(0.8f, 0.8f, 0.3f)
-//                            });
-//    scene.objects.push_back({
-//                                    SurfaceCoefs::plane(glm::dvec3(0.0, -5.0, 0.0), glm::dvec3(0.0, 1.0, 0.0)),
-//                                    glm::vec3(0.8f, 0.8f, 0.8f)
-//                            });
-//    scene.lights.push_back(LightSource::directional(2.0f, glm::vec3(-0.2f, -1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 1.0f)));
-//    scene.lights.push_back(LightSource::spherical(20.0f, glm::vec3(-1.0f, 1.0f, 3.0f), glm::vec3(1.0f, 0.8f, 0.0f)));
-//    scene.lights.push_back(LightSource::spherical(100.0f, glm::vec3(15.0f, -4.0f, 40.0f), glm::vec3(1.0f)));
-        scene.objects.push_back({
-                                    SurfaceCoefs::dingDong(glm::dvec3(0, 0, 5)),
-                                    glm::vec3(0.8f, 0.8f, 0.8f)
+    scene.objects.push_back({
+                                    SurfaceCoefs::sphere(glm::dvec3(0, 0, 5), 1),
+                                    glm::vec3(0.8f, 0.3f, 0.3f)
                             });
-        scene.lights.push_back(LightSource::directional(3.0f, glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f)));
+    scene.objects.push_back({
+                                    SurfaceCoefs::sphere(glm::dvec3(1.5, 1, 10), 1.5),
+                                    glm::vec3(0.8f, 0.8f, 0.3f)
+                            });
+    scene.objects.push_back({
+                                    SurfaceCoefs::plane(glm::dvec3(0.0, -3.0, 0.0), glm::dvec3(0.0, 1.0, 0.0)),
+                                    glm::vec3(0.6f)
+                            });
+    scene.lights.push_back(LightSource::directional(2.5f, glm::dvec3(-0.2, -1.0, 1.0), glm::vec3(0.5f, 0.5f, 1.0f)));
+    scene.lights.push_back(LightSource::spherical(100.0f, glm::dvec3(15.0, -2.0, 40.0), glm::vec3(1.0f, 1.0f, 0.3f)));
+//    scene.objects.push_back({
+//                                SurfaceCoefs::dingDong(glm::vec3(0, 0, 5)),
+//                                glm::vec3(0.8f, 0.8f, 0.8f)
+//                        });
+//    scene.lights.push_back(LightSource::directional(3.0f, glm::dvec3(0.3, -0.3, 1.0), glm::vec3(1.0f)));
 
     // texture creation and initialization
     unsigned int texture;

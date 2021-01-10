@@ -2,6 +2,7 @@ CUDA_HOME := /usr/local/cuda-10.1
 CC        := g++
 NVCC      := $(CUDA_HOME)/bin/nvcc
 FLAGS     := -std=c++14
+FLAGS_CU  := $(FLAGS) --ptxas-options=-v -arch=sm_50
 LIB       := -lGLEW -lGL -lglfw
 LIB_CUDA  := $(LIB) -L$(CUDA_HOME)/lib -lcudart
 INC       := -I$(CUDA_HOME)/include -I.
@@ -18,13 +19,13 @@ OBJ_CUDA     := $(OBJ) update-cuda.o
 	$(CC) $(FLAGS) -c -o $@ $< $(INC)
 
 %.o: %.cu Makefile
-	$(NVCC) $(FLAGS) -dc -o $@ $< $(INC)
+	$(NVCC) $(FLAGS_CU) -dc -o $@ $< $(INC)
 
 ray-tracer-cpu: $(OBJ_CPU) $(HEADERS) Makefile
-	$(NVCC) -o $@ $(OBJ_CPU) $(LIB_CUDA)
+	$(NVCC) $(FLAGS_CU) -o $@ $(OBJ_CPU) $(LIB_CUDA)
 
 ray-tracer-cuda: $(OBJ_CUDA) $(HEADERS_CUDA) Makefile
-	$(NVCC) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
+	$(NVCC) $(FLAGS_CU) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
 
 clean:
 	rm -f *.o ray-tracer-*

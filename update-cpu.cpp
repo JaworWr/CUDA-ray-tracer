@@ -11,6 +11,7 @@ std::vector<Object> g_objects;
 std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
 const glm::dvec3 RAY_ORIGIN(0.0f);
+const double SHADOW_BIAS = 1e-2;
 
 
 void init_update(unsigned int texture, const Scene& scene)
@@ -59,7 +60,19 @@ glm::vec3 render_pixel(int pixel_x, int pixel_y)
         auto surface_normal = g_objects[best_idx].surface.normal_vector(surface_point);
         auto surface_color = g_objects[best_idx].color;
         for (const LightSource& light : g_lights) {
-            result_color += light.surface_color(surface_point, surface_normal, surface_color);
+            double max_t = 0;
+            auto shadow_dir = light.shadow_ray(surface_point, max_t);
+            bool in_shadow = false;
+            for (const Object& object : g_objects) {
+                double t = object.surface.intersect_ray(surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
+                if (t > EPS && t < max_t) {
+                    in_shadow = true;
+                    break;
+                }
+            }
+            if (!in_shadow) {
+                result_color += light.surface_color(surface_point, surface_normal, surface_color);
+            }
         }
         return glm::min(glm::vec3(1.0f), result_color);
     }

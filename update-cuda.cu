@@ -15,6 +15,7 @@ Object *d_objects;
 __constant__ size_t d_n_objects;
 LightSource *d_lights;
 __constant__ size_t d_n_lights;
+const double SHADOW_BIAS = 1e-2;
 
 const glm::dvec3 RAY_ORIGIN(0.0f);
 __constant__ glm::dvec3 d_ray_origin;
@@ -84,7 +85,19 @@ __global__ void update_kernel(Object *objects, LightSource *lights, cudaSurfaceO
         auto surface_normal = objects[best_idx].surface.normal_vector_cuda(surface_point);
         auto surface_color = objects[best_idx].color;
         for (int j = 0; j < d_n_lights; j++) {
-            result_color += lights[j].surface_color_cuda(surface_point, surface_normal, surface_color);
+            double max_t = 0;
+            auto shadow_dir = lights[j].shadow_ray_cuda(surface_point, max_t);
+            bool in_shadow = false;
+            for (int k = 0; k < d_n_objects; k++) {
+                double t = objects[k].surface.intersect_ray_cuda(surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
+                if (t > EPS && t < max_t) {
+                    in_shadow = true;
+                    break;
+                }
+            }
+            if (!in_shadow) {
+                result_color += lights[j].surface_color_cuda(surface_point, surface_normal, surface_color);
+            }
         }
         output_color = glm::iround(glm::min(glm::vec3(1.0f), result_color) * 255.0f);
     }
