@@ -2,8 +2,8 @@ CUDA_HOME := /usr/local/cuda-10.1
 CC        := g++
 NVCC      := $(CUDA_HOME)/bin/nvcc
 FLAGS     := -std=c++14
-FLAGS_CU  := $(FLAGS) --ptxas-options=-v -arch=sm_50
-LIB       := -lGLEW -lGL -lglfw
+FLAGS_CU  := $(FLAGS) --ptxas-options=-v -arch=sm_50 --use_fast_math
+LIB       := -lGLEW -lGL -lglfw -lyaml-cpp
 LIB_CUDA  := $(LIB) -L$(CUDA_HOME)/lib -lcudart
 INC       := -I$(CUDA_HOME)/include -I.
 

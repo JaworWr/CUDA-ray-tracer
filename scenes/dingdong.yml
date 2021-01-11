@@ -1,0 +1,27 @@
+width: 800
+height: 600
+fov: 45
+bg_color: [0, 0.1, 0.2]
+
+objects:
+  - type: dingDong
+    origin: [0, 0, 10]
+    color: [0.8, 0.8, 0.8]
+  - type: sphere
+    center: [20, 6, 5]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [28, 4, 5]
+    radius: 2
+    color: [0, 0.8, 0.8]
+
+light_sources:
+  - type: directional
+    intensity: 3
+    direction: [0.8, -0.3, 0.2]
+    color: [1, 1, 1]
+  - type: spherical
+    intensity: 800
+    position: [0, 4, 4]
+    color: [1, 0.8, 0.4]

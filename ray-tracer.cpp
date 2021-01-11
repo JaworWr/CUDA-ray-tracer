@@ -133,6 +133,22 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    // load the scene
+    if (argc < 2) {
+        fprintf(stderr, "Input file not specified\n");
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+    Scene scene;
+    try {
+        scene = Scene::load_from_file(argv[1]);
+    }
+    catch (SceneLoadException& e) {
+        fprintf(stderr, "Error during scene loading\n%s\n", e.what());
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
     // create a window
     GLFWwindow *window = glfwCreateWindow(800, 600, "Ray tracer", nullptr, nullptr);
     if (window == nullptr) {
@@ -168,25 +184,6 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // initialize the camera
-
-    // example scene
-    Scene scene(800, 600, 45.0f, glm::vec3(0.0f, 0.1f, 0.2f));
-    scene.objects.push_back({
-                                SurfaceCoefs::dingDong(glm::vec3(0, 0, 10)),
-                                glm::vec3(0.8f, 0.8f, 0.8f)
-                        });
-    scene.objects.push_back({
-                                    SurfaceCoefs::sphere(glm::dvec3(20.0, 6.0, 5.0), 1.0),
-                                    glm::vec3(0.8f, 0.8f, 0.0f)
-                            });
-    scene.objects.push_back({
-                                    SurfaceCoefs::sphere(glm::dvec3(28.0, 4.0, 5.0), 2.0),
-                                    glm::vec3(0.0f, 0.8f, 0.8f)
-                            });
-    scene.lights.push_back(LightSource::directional(3.0f, glm::dvec3(0.8, -0.3, 0.2), glm::vec3(1.0f)));
-    scene.lights.push_back(LightSource::spherical(800.0f, glm::dvec3(0.0, 4.0, 4.0), glm::vec3(1.0f, 0.8f, 0.4f)));
 
     // texture creation and initialization
     unsigned int texture;
