@@ -23,7 +23,7 @@ int indices[] = {
 glm::dvec3 position(0.0);
 glm::dvec3 direction(0.0);
 const glm::dvec3 up(0.0, 1.0, 0.0);
-glm::dvec3 camera_front(0.0);
+glm::dvec3 movement_front(0.0);
 glm::dvec3 camera_right(0.0);
 glm::dvec3 camera_up(0.0);
 double pitch = 0.0;
@@ -42,10 +42,9 @@ void update_direction()
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    camera_front = direction;
     camera_right = -glm::normalize(glm::cross(direction, up));
     camera_up = glm::cross(direction, camera_right);
-    camera_front = glm::cross(camera_right, up);
+    movement_front = glm::cross(camera_right, up);
 }
 
 glm::dmat4 camera_matrix()
@@ -64,10 +63,10 @@ void process_inputs(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        position += camera_front * camera_speed;
+        position += movement_front * camera_speed;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        position -= camera_front * camera_speed;
+        position -= movement_front * camera_speed;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         position += camera_right * camera_speed;
