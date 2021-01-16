@@ -148,8 +148,19 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    int window_width = 800, window_height = 600;
+    if (argc >= 4) {
+        window_width = strtol(argv[2], nullptr, 10);
+        window_height = strtol(argv[3], nullptr, 10);
+        if (window_width < 10 || window_height < 10) {
+            fprintf(stderr, "Invalid window size\n");
+            glfwTerminate();
+            return EXIT_FAILURE;
+        }
+    }
+
     // create a window
-    GLFWwindow *window = glfwCreateWindow(800, 600, "Ray tracer", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(window_width, window_height, "Ray tracer", nullptr, nullptr);
     if (window == nullptr) {
         fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
