@@ -1,0 +1,164 @@
+width: 800
+height: 600
+fov: 60
+bg_color: [0, 0.1, 0.2]
+
+objects:
+  - type: sphere
+    center: [8, 6, 15]
+    radius: 1
+    color: [0.8, 0.8, 0.8]
+  - type: sphere
+    center: [6, 6, 15]
+    radius: 1
+    color: [0, 0.8, 0.8]
+  - type: sphere
+    center: [4, 6, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [2, 6, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [4, 4, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [5, 3, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [2, 0, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [8, -1, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [2, -2, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [5, -8, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-3, 6, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-7, 4, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [8, 6, 14]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [8, -2, 13]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [3, -5, 18]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-2, -1, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-6, 6, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-4, 4, 17]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-2, -2, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: sphere
+    center: [-3, -8, 15]
+    radius: 1
+    color: [0.8, 0.8, 0]
+
+light_sources:
+  - type: directional
+    intensity: 0.1
+    direction: [0.3, -0.3, 0.2]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.4, -0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.5, -0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.6, -0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.7, -0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, -0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, -0.4, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, -0.3, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, -0.2, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, -0.1, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, 0, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, 0.1, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.8, 0.2, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ -0.8, 0.3, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ -0.7, 0.4, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ -0.6, -0.7, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ 0.3, 0.5, 0.2 ]
+    color: [1, 1, 1]
+  - type: directional
+    intensity: 0.1
+    direction: [ -0.5, 0.5, 0.3 ]
+    color: [1, 1, 1]
+  - type: spherical
+    intensity: 800
+    position: [0, 4, 4]
+    color: [1, 0.8, 0.4]
