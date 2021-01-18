@@ -2,6 +2,8 @@
 #include <vector>
 #include <cstdio>
 #include "update.h"
+#include "surface_impl.h"
+#include "light_impl.h"
 
 unsigned int g_texture;
 int g_width, g_height;
@@ -12,8 +14,6 @@ std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
 glm::dvec3 ray_origin;
-const double EPS = 1e-8;
-const double SHADOW_BIAS = 1e-2;
 
 
 void init_update(unsigned int texture, const Scene& scene)
@@ -50,7 +50,7 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
-        double t = g_objects[i].surface.intersect_ray(ray_origin, dir);
+        double t = intersect_ray(g_objects[i].surface, ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
@@ -59,21 +59,21 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
     if (best_idx >= 0) {
         glm::vec3 result_color(0.0f);
         auto surface_point = ray_origin + best_t * dir;
-        auto surface_normal = g_objects[best_idx].surface.normal_vector(surface_point);
-        auto surface_color = g_objects[best_idx].color;
+        auto surface_normal = normal_vector(g_objects[best_idx].surface, surface_point);
+        auto object_color = g_objects[best_idx].color;
         for (const LightSource& light : g_lights) {
             double max_t = 0;
-            auto shadow_dir = light.shadow_ray(surface_point, max_t);
+            auto shadow_dir = shadow_ray(light, surface_point, max_t);
             bool in_shadow = false;
             for (const Object& object : g_objects) {
-                double t = object.surface.intersect_ray(surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
+                double t = intersect_ray(object.surface, surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
                 if (t > EPS && t < max_t) {
                     in_shadow = true;
                     break;
                 }
             }
             if (!in_shadow) {
-                result_color += light.surface_color(surface_point, surface_normal, surface_color);
+                result_color += surface_color(light, surface_point, surface_normal, object_color);
             }
         }
         return glm::min(glm::vec3(1.0f), result_color);

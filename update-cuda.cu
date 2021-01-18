@@ -5,6 +5,8 @@
 #include <glm/gtc/integer.hpp>
 #include "helper_cuda_opengl.h"
 #include "update.h"
+#include "surface_impl.h"
+#include "light_impl.h"
 
 cudaGraphicsResource_t resource;
 size_t h_width, h_height;
@@ -15,8 +17,6 @@ Object *d_objects;
 __constant__ size_t d_n_objects;
 LightSource *d_lights;
 __constant__ size_t d_n_lights;
-const double EPS = 1e-8;
-const double SHADOW_BIAS = 1e-2;
 
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
 __constant__ glm::dvec4 d_ray_origin;
@@ -76,7 +76,7 @@ update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceO
     int best_idx = -1;
     double best_t = INFINITY;
     for (int i = 0; i < d_n_objects; i++) {
-        double t = objects[i].surface.intersect_ray_cuda(ray_origin, dir);
+        double t = intersect_ray(objects[i].surface, ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
@@ -86,14 +86,14 @@ update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceO
     if (best_idx >= 0) {
         glm::vec3 result_color(0.0f);
         auto surface_point = ray_origin + best_t * dir;
-        auto surface_normal = objects[best_idx].surface.normal_vector_cuda(surface_point);
-        auto surface_color = objects[best_idx].color;
+        auto surface_normal = normal_vector(objects[best_idx].surface, surface_point);
+        auto object_color = objects[best_idx].color;
         for (int j = 0; j < d_n_lights; j++) {
             double max_t = 0;
-            auto shadow_dir = lights[j].shadow_ray_cuda(surface_point, max_t);
+            auto shadow_dir = shadow_ray(lights[j], surface_point, max_t);
             bool in_shadow = false;
             for (int k = 0; k < d_n_objects; k++) {
-                double t = objects[k].surface.intersect_ray_cuda(surface_point + SHADOW_BIAS * surface_normal,
+                double t = intersect_ray(objects[k].surface, surface_point + SHADOW_BIAS * surface_normal,
                                                                  shadow_dir);
                 if (t > EPS && t < max_t) {
                     in_shadow = true;
@@ -101,7 +101,7 @@ update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceO
                 }
             }
             if (!in_shadow) {
-                result_color += lights[j].surface_color_cuda(surface_point, surface_normal, surface_color);
+                result_color += surface_color(lights[j], surface_point, surface_normal, object_color);
             }
         }
         output_color = glm::iround(glm::min(glm::vec3(1.0f), result_color) * 255.0f);

@@ -9,17 +9,25 @@ INC       := -I$(CUDA_HOME)/include -I.
 
 all: ray-tracer-cpu ray-tracer-cuda
 
-HEADERS      := shader-program.h update.h surface.h light.h scene.h
 HEADERS_CUDA := $(HEADERS) helper_cuda_opengl.h
 OBJ          := ray-tracer.o shader-program.o surface.o light.o scene.o
 OBJ_CPU      := $(OBJ) update-cpu.o
 OBJ_CUDA     := $(OBJ) update-cuda.o
 
-%.o: %.cpp Makefile
+
+%.o: %.cpp %.h Makefile
 	$(CC) $(FLAGS) -c -o $@ $< $(INC)
 
-%.o: %.cu Makefile
+UPDATE_HEADERS := update.h surface_impl.h light_impl.h
+
+update-cpu.o: update-cpu.cpp $(UPDATE_HEADERS) Makefile
+	$(CC) $(FLAGS) -c -o $@ $< $(INC)
+
+update-cuda.o: update-cuda.cu $(UPDATE_HEADERS) Makefile
 	$(NVCC) $(FLAGS_CU) -dc -o $@ $< $(INC)
+
+ray-tracer.o: ray-tracer.cpp Makefile
+	$(CC) $(FLAGS) -c -o $@ $< $(INC)
 
 ray-tracer-cpu: $(OBJ_CPU) $(HEADERS) Makefile
 	$(NVCC) $(FLAGS_CU) -o $@ $(OBJ_CPU) $(LIB_CUDA)
