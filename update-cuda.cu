@@ -60,7 +60,7 @@ void init_update(unsigned int texture, const Scene &scene)
 }
 
 __global__ void
-update_kernel(Object *objects, LightSource *lights, cudaSurfaceObject_t surfaceObject, glm::dmat4 camera_matrix)
+update_kernel(const Object * __restrict__ objects, const LightSource * __restrict__ lights, cudaSurfaceObject_t surfaceObject, glm::dmat4 camera_matrix)
 {
     size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
     size_t ty = blockIdx.y * blockDim.y + threadIdx.y;
