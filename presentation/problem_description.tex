@@ -1,0 +1,59 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[polish]{babel}
+
+\graphicspath{{./images/}}
+
+\newcommand{\set}[1]{\left\lbrace #1 \right\rbrace}
+\DeclareMathOperator*{\dist}{dist}
+\DeclareMathOperator*{\lin}{lin}
+
+\begin{document}
+\section*{Opis problemu}
+\subsection*{Śledzenie promieni}
+W ramach projektu zaimplementowałem ray tracer powierzchni implicit, działający w czasie rzeczywistym.
+
+\includegraphics[scale=0.7]{promienie.png}
+
+Dla każdego piksela tworzony jest promień zadany równaniem $$x + td$$
+dla pewnych wektorów $x$, $d$, gdzie dodatkowo $\|d\| = 1$.
+Powierzchnie zadane są równaniem $$ F(x_1, x_2, x_3) = 0$$ gdzie $F$ jest wielomianem stopnia co najwyżej 3. Aby policzyć punkt przecięcia należy rozwiązać równanie $$F(x_1 + td_1, x_2 + td_2, x_3 + td_3) = 0$$ przy czym dla wielomianów stopnia 3 istnieją jawne wzory na pierwiastki. Do obliczenia koloru powierzchni potrzebny jest również wektor normalny, zadany przez gradient $$\nabla F(x_1, x_2, x_3)$$
+
+\subsection*{Źródła światła}
+W swoim programie uwzględniłem dwa rodzaje źródeł światła: kierunkowe i punktowe.
+\begin{itemize}
+    \item \textbf{Źródła kierunkowe} Symulują odległe źródła światła (np. Słońce). Zakładamy, że promienie światłą są równoległe.
+    
+    \includegraphics[scale=0.7]{kierunkowe.png}
+
+    Dla takich źródeł ilość światła jest wprost proporcjonalna do jego intensywności i kąta padania.
+
+    \item \textbf{Źródła punktowe} Zakładamy, że źródłem światła jest pojedynczy punkt znajdujący się gdzieś na scenie. Intensywność światła spada wraz z kwadratem odległości.
+    
+    \includegraphics[scale=0.7]{punktowe.png}
+\end{itemize}
+
+\subsection*{Cienie}
+Czasami dany punkt nie otrzymuje światła, ponieważ jest on zasłonięty przez inny obiekt. Aby to sprawdzić, należy prześledzić dodatkowy promień, emitowany z badanego punktu w kierunku przeciwnym do kierunki padania światła.
+
+\includegraphics[scale=0.7]{cienie.png}
+
+\section*{Implementacja}
+Implementacja na GPU tworzy osobny wątek dla każdego rozważanego piksela. Uzyskane jest znaczne przyspieszenie względem implementacji na CPU. Czasy renderowania dla jednej klatki (dla początkowego ustawienia kamery) były następujące:
+\begin{itemize}
+    \item \texttt{dingdong.yml}: CPU: ok. 800 ms, CUDA: ok. 25 ms (38 FPS)
+    \item \texttt{monkey\_saddle.yml}: CPU: ok. 520 ms, CUDA: ok. 17 ms (56 FPS)
+\end{itemize}
+\section*{Źródło}
+\url{https://www.scratchapixel.com}
+\end{document}

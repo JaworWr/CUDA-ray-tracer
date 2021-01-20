@@ -1,11 +1,8 @@
 # Projekt - ray tracer
-## Wstęp
-W ramach projektu zaimplementowałem ray tracer powierzchni implicit.
-Dostępne są zarówno kierunkowe jak i punktowe źródła światła. Renderowanie przeprowadzane jest w czasie rzeczywistym, dodatkowo program umożliwia poruszanie kamerą, co umożliwia zmianę 
-wyświetlanej sceny.
-
-Renderowane powierzchnie zadane są równaniem F(x, y, z) = 0, gdzie F jest wielomianem stopnia co najwyżej 3. Umożliwia to wyznaczenie punktów przecięcia promieni z powierzchnią za pomocą jawnych 
-wzorów na pierwiastki wielomianu. Aby obliczyć ilość światła padającego na obiekt potrzebny jest dodatkowo wektor normalny, obliczany jako gradient w danym punkcie.
+## Wymagane biblioteki
+* GLFW, GLEW, libGL
+* OpenGL Mathematics (GLM)
+* yaml-cpp
 
 ## Instrukcja użycia
 Program uruchamia się poleceniem `<nazwa> <plik z opisem sceny> [początkowa szerokość okna] [początkowa wysokość okna]`, gdzie jako nazwę programu należy podać `ray-tracer-cpu` lub 

@@ -1,2 +1,9 @@
 *.o
 ray-tracer-*
+*.pdf
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.aux
+*.fdb_latexmk
