@@ -102,3 +102,8 @@ float update(const glm::dmat4& camera_matrix)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, g_width, g_height, 0, GL_RGB, GL_FLOAT, &g_data[0]);
     return elapsed * 1000.0f;
 }
+
+void cleanup_update()
+{
+
+}

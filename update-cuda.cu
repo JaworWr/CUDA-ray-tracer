@@ -149,3 +149,10 @@ float update(const glm::dmat4 &camera_matrix)
     cudaEventElapsedTime(&ms, start, end);
     return ms;
 }
+
+void cleanup_update()
+{
+    cudaFree(d_objects);
+    cudaFree(d_lights);
+    cudaGraphicsUnregisterResource(resource);
+}

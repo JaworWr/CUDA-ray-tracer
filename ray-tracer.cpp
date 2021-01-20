@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    cleanup_update();
     glfwTerminate();
     return EXIT_SUCCESS;
 }
