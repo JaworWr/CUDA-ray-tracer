@@ -19,12 +19,8 @@ Object *d_objects;
 __constant__ size_t d_n_objects;
 LightSource *d_lights;
 __constant__ size_t d_n_lights;
-
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
 __constant__ glm::dvec3 d_ray_origin;
-
-glm::dvec3 *d_ray_dirs;
-glm::vec3 *d_pixel_colors;
 
 cudaEvent_t start, end;
 
@@ -60,30 +56,8 @@ void init_update(unsigned int texture, const Scene &scene)
 
     checkCudaErrors(cudaGraphicsGLRegisterImage(&resource, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone));
 
-    checkCudaErrors(cudaMalloc(&d_ray_dirs, h_width * h_height * sizeof(glm::dvec4)));
-    checkCudaErrors(cudaMalloc(&d_pixel_colors, h_width * h_height * sizeof(glm::vec3)));
-
     checkCudaErrors(cudaEventCreate(&start));
     checkCudaErrors(cudaEventCreate(&end));
-}
-
-
-__global__ void
-init_rays(glm::dvec3 *__restrict__ dirs, glm::dmat4 camera_matrix)
-{
-    size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t ty = blockIdx.y * blockDim.y + threadIdx.y;
-
-    double ndc_x = (tx + 0.5) / d_width;
-    double ndc_y = (ty + 0.5) / d_height;
-    double camera_x = (2.0 * ndc_x - 1.0) * d_aspect_ratio * d_vertical_fov;
-    double camera_y = (2.0 * ndc_y - 1.0) * d_vertical_fov;
-    glm::dvec3 dir(camera_x, camera_y, 1.0);
-    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - d_ray_origin);
-
-    if (tx < d_width && ty < d_height) {
-        dirs[ty * d_width + tx] = dir;
-    }
 }
 
 __device__ int get_color_and_object(const Object *__restrict__ objects, const LightSource *__restrict__ lights,
@@ -126,43 +100,39 @@ __device__ int get_color_and_object(const Object *__restrict__ objects, const Li
 }
 
 __global__ void
-update_kernel(const glm::dvec3 *__restrict__ dirs,
-              const Object *__restrict__ objects, const LightSource *__restrict__ lights,
-              glm::vec3 *__restrict__ output_colors)
+update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects,
+              const LightSource *__restrict__ lights, cudaSurfaceObject_t surfaceObject)
 {
     size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
     size_t ty = blockIdx.y * blockDim.y + threadIdx.y;
 
+    double ndc_x = (tx + 0.5) / d_width;
+    double ndc_y = (ty + 0.5) / d_height;
+    double camera_x = (2.0 * ndc_x - 1.0) * d_aspect_ratio * d_vertical_fov;
+    double camera_y = (2.0 * ndc_y - 1.0) * d_vertical_fov;
+    glm::dvec3 dir(camera_x, camera_y, 1.0);
+    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - d_ray_origin);
+
     if (tx < d_width && ty < d_height) {
-        auto dir = dirs[ty * d_width + tx];
-        glm::vec3 object_color(0.0f);
+        glm::vec3 object_color(0.0f), output_color;
         glm::dvec3 surface_point, surface_normal;
         int idx = get_color_and_object(objects, lights, d_ray_origin, dir, object_color, surface_point, surface_normal);
         if (idx == NO_OBJECT) {
-            output_colors[ty * d_width + tx] = d_bg_color;
+            output_color = d_bg_color;
         }
         else {
-            output_colors[ty * d_width + tx] = object_color;
+            output_color = object_color;
         }
-    }
-}
 
-__global__ void write_colors(glm::vec3 *colors, cudaSurfaceObject_t surfaceObject)
-{
-    size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
-    size_t ty = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (tx < d_width && ty < d_height) {
-        glm::ivec3 output_color = glm::iround(colors[ty * d_width + tx] * 255.0f);
+        glm::ivec3 result = glm::iround(output_color * 255.0f);
         uchar4 data = {
-                (unsigned char) output_color.r,
-                (unsigned char) output_color.g,
-                (unsigned char) output_color.b,
+                (unsigned char) result.r,
+                (unsigned char) result.g,
+                (unsigned char) result.b,
                 255
         };
         surf2Dwrite(data, surfaceObject, tx * sizeof(uchar4), ty);
     }
-
 }
 
 float update(const glm::dmat4 &camera_matrix)
@@ -185,9 +155,7 @@ float update(const glm::dmat4 &camera_matrix)
     checkCudaErrors(cudaMemcpyToSymbol(d_ray_origin, &ray_origin, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice));
 
     cudaEventRecord(start);
-    init_rays<<<gridSize, blockSize>>>(d_ray_dirs, camera_matrix);
-    update_kernel<<<gridSize, blockSize>>>(d_ray_dirs, d_objects, d_lights, d_pixel_colors);
-    write_colors<<<gridSize, blockSize>>>(d_pixel_colors, surface_object);
+    update_kernel<<<gridSize, blockSize>>>(camera_matrix, d_objects, d_lights, surface_object);
     cudaEventRecord(end);
     cudaEventSynchronize(end);
     getLastCudaError("update_kernel error");
