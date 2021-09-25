@@ -173,7 +173,7 @@ Scene Scene::load_from_file(const char *path)
     for (const auto &node: scene_desc["objects"]) {
         Object object{};
         object.surface = parse_surface(node);
-        object.reflection_ratio = node["reflection_ratio"].as<double>(0.0);
+        object.reflection_ratio = node["reflection_ratio"].as<float>(0.0f);
         object.color = get_value<glm::vec3>(node, "color");
         scene.objects.push_back(object);
     }

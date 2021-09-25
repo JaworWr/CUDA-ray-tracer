@@ -9,7 +9,7 @@
 struct Object
 {
     SurfaceCoefs surface;
-    double reflection_ratio;
+    float reflection_ratio;
     glm::vec3 color;
 };
 
