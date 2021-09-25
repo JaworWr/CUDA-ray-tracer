@@ -1,0 +1,21 @@
+width: 600
+height: 450
+fov: 30
+bg_color: [0, 0.1, 0.2]
+
+light_sources:
+  - type: directional
+    intensity: 3
+    direction: [0.8, -0.3, 0.2]
+    color: [1, 1, 1]
+
+objects:
+  - type: sphere
+    center: [5, 6, 35]
+    radius: 1
+    color: [0.8, 0.8, 0]
+  - type: plane
+    origin: [0, -100, 0]
+    normal: [0, 1, 0]
+    color: [0, 0.8, 0]
+    reflection_ratio: 0.5
