@@ -21,6 +21,7 @@ LightSource *d_lights;
 __constant__ size_t d_n_lights;
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
 __constant__ glm::dvec3 d_ray_origin;
+__constant__ int d_max_reflections;
 
 cudaEvent_t start, end;
 
@@ -35,7 +36,6 @@ void init_update(unsigned int texture, const Scene &scene)
     h_height = scene.px_height;
     double h_aspect_ratio = scene.aspect_ratio();
     double h_vertical_fov = tan(0.5 * scene.vertical_fov);
-    auto h_bg_color = scene.bg_color;
 
     size_t h_n_objects = scene.objects.size();
     checkCudaErrors(cudaMalloc(&d_objects, h_n_objects * sizeof(Object)));
@@ -51,8 +51,10 @@ void init_update(unsigned int texture, const Scene &scene)
     checkCudaErrors(cudaMemcpyToSymbol(d_height, &h_height, sizeof(size_t), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpyToSymbol(d_aspect_ratio, &h_aspect_ratio, sizeof(double), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpyToSymbol(d_vertical_fov, &h_vertical_fov, sizeof(double), 0, cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpyToSymbol(d_bg_color, &h_bg_color, sizeof(glm::ivec3), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpyToSymbol(d_bg_color, &scene.bg_color, sizeof(glm::ivec3), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpyToSymbol(d_ray_origin, &RAY_ORIGIN, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice));
+    checkCudaErrors(
+            cudaMemcpyToSymbol(d_max_reflections, &scene.max_reflections, sizeof(int), 0, cudaMemcpyHostToDevice));
 
     checkCudaErrors(cudaGraphicsGLRegisterImage(&resource, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsNone));
 
@@ -122,6 +124,26 @@ update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects
         }
         else {
             output_color = object_color;
+            float cur_ratio = 1.0f;
+            int cur_reflections = 0;
+#define UPDATE_COLOR(col) output_color = (1.0f - cur_ratio) * output_color + cur_ratio * (col);
+            while (objects[idx].reflection_ratio > 0.0f) {
+                cur_ratio *= objects[idx].reflection_ratio;
+                if (cur_reflections == d_max_reflections) {
+                    UPDATE_COLOR(d_bg_color)
+                    break;
+                }
+                cur_reflections++;
+
+                dir = reflect_ray(dir, surface_normal);
+                auto origin = surface_point + SHADOW_BIAS * surface_normal;
+                idx = get_color_and_object(objects, lights, origin, dir, object_color, surface_point, surface_normal);
+                if (idx == NO_OBJECT) {
+                    UPDATE_COLOR(d_bg_color)
+                    break;
+                }
+                UPDATE_COLOR(object_color)
+            }
         }
 
         glm::ivec3 result = glm::iround(output_color * 255.0f);
