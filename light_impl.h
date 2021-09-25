@@ -43,5 +43,9 @@ HOST_OR_DEVICE glm::vec3 surface_color(const LightSource &light, const glm::dvec
     return object_color / M_PIf32 * color * glm::max(0.0f, (float) glm::dot(object_norm, dir));
 }
 
+HOST_OR_DEVICE inline glm::dvec3 reflect_ray(const glm::dvec3 &dir, const glm::dvec3 &normal)
+{
+    return dir - 2.0 * glm::dot(dir, normal) * normal;
+}
 
 #endif //CUDA_RAY_TRACER_LIGHT_IMPL_H
