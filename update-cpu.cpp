@@ -5,6 +5,8 @@
 #include "surface_impl.h"
 #include "light_impl.h"
 
+const int NO_OBJECT = -1;
+
 unsigned int g_texture;
 int g_width, g_height;
 std::vector<float> g_data;
@@ -13,10 +15,10 @@ std::vector<Object> g_objects;
 std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
-glm::dvec3 ray_origin;
+glm::dvec3 g_ray_origin;
 
 
-void init_update(unsigned int texture, const Scene& scene)
+void init_update(unsigned int texture, const Scene &scene)
 {
     g_texture = texture;
     g_width = scene.px_width;
@@ -38,19 +40,13 @@ void init_update(unsigned int texture, const Scene& scene)
     }
 }
 
-glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y)
+int get_color_and_object(const glm::dvec3 &dir, glm::vec3 &output_color, glm::dvec3 &surface_point,
+                         glm::dvec3 &surface_normal)
 {
-    double ndc_x = (pixel_x + 0.5) / g_width;
-    double ndc_y = (pixel_y + 0.5) / g_height;
-    double camera_x = (2.0 * ndc_x - 1.0) * g_aspect_ratio * g_vertical_fov;
-    double camera_y = (2.0 * ndc_y - 1.0) * g_vertical_fov;
-    glm::dvec3 dir(camera_x, camera_y, 1.0);
-    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - ray_origin);
-
-    int best_idx = -1;
+    int best_idx = NO_OBJECT;
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
-        double t = intersect_ray(g_objects[i].surface, ray_origin, dir);
+        double t = intersect_ray(g_objects[i].surface, g_ray_origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
@@ -58,14 +54,14 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
     }
     if (best_idx >= 0) {
         glm::vec3 result_color(0.0f);
-        auto surface_point = ray_origin + best_t * dir;
-        auto surface_normal = normal_vector(g_objects[best_idx].surface, surface_point);
+        surface_point = g_ray_origin + best_t * dir;
+        surface_normal = normal_vector(g_objects[best_idx].surface, surface_point);
         auto object_color = g_objects[best_idx].color;
-        for (const LightSource& light : g_lights) {
+        for (const LightSource &light: g_lights) {
             double max_t = 0;
             auto shadow_dir = shadow_ray(light, surface_point, max_t);
             bool in_shadow = false;
-            for (const Object& object : g_objects) {
+            for (const Object &object: g_objects) {
                 double t = intersect_ray(object.surface, surface_point + SHADOW_BIAS * surface_normal, shadow_dir);
                 if (t > EPS && t < max_t) {
                     in_shadow = true;
@@ -76,16 +72,31 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
                 result_color += surface_color(light, surface_point, surface_normal, object_color);
             }
         }
-        return glm::min(glm::vec3(1.0f), result_color);
+        output_color = glm::min(glm::vec3(1.0f), result_color);
     }
-    else {
-        return g_bg_color;
-    }
+    return best_idx;
 }
 
-float update(const glm::dmat4& camera_matrix)
+glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y)
 {
-    ray_origin = camera_matrix * RAY_ORIGIN;
+    double ndc_x = (pixel_x + 0.5) / g_width;
+    double ndc_y = (pixel_y + 0.5) / g_height;
+    double camera_x = (2.0 * ndc_x - 1.0) * g_aspect_ratio * g_vertical_fov;
+    double camera_y = (2.0 * ndc_y - 1.0) * g_vertical_fov;
+    glm::dvec3 dir(camera_x, camera_y, 1.0);
+    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - g_ray_origin);
+
+    glm::vec3 object_color;
+    glm::dvec3 surface_point, surface_normal;
+    if (get_color_and_object(dir, object_color, surface_point, surface_normal) == NO_OBJECT) {
+        return g_bg_color;
+    }
+    return object_color;
+}
+
+float update(const glm::dmat4 &camera_matrix)
+{
+    g_ray_origin = camera_matrix * RAY_ORIGIN;
     auto start_time = glfwGetTime();
     for (int y = 0; y < g_height; y++) {
         for (int x = 0; x < g_width; x++) {
