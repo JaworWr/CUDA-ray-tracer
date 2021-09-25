@@ -16,6 +16,7 @@ std::vector<LightSource> g_lights;
 glm::vec3 g_bg_color;
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
 glm::dvec3 g_ray_origin;
+int g_max_reflections;
 
 
 void init_update(unsigned int texture, const Scene &scene)
@@ -28,6 +29,7 @@ void init_update(unsigned int texture, const Scene &scene)
     g_objects = scene.objects;
     g_lights = scene.lights;
     g_bg_color = scene.bg_color;
+    g_max_reflections = scene.max_reflections;
 
     // reserve space for the RGB data of the texture
     g_data.resize(g_width * g_height * 3);
@@ -40,21 +42,21 @@ void init_update(unsigned int texture, const Scene &scene)
     }
 }
 
-int get_color_and_object(const glm::dvec3 &dir, glm::vec3 &output_color, glm::dvec3 &surface_point,
-                         glm::dvec3 &surface_normal)
+int get_color_and_object(const glm::dvec3 &origin, const glm::dvec3 &dir, glm::vec3 &result_color,
+                         glm::dvec3 &surface_point, glm::dvec3 &surface_normal)
 {
     int best_idx = NO_OBJECT;
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
-        double t = intersect_ray(g_objects[i].surface, g_ray_origin, dir);
+        double t = intersect_ray(g_objects[i].surface, origin, dir);
         if (t >= EPS && t < 1e6 && t < best_t) {
             best_t = t;
             best_idx = i;
         }
     }
     if (best_idx >= 0) {
-        glm::vec3 result_color(0.0f);
-        surface_point = g_ray_origin + best_t * dir;
+        result_color = glm::dvec3(0.0);
+        surface_point = origin + best_t * dir;
         surface_normal = normal_vector(g_objects[best_idx].surface, surface_point);
         auto object_color = g_objects[best_idx].color;
         for (const LightSource &light: g_lights) {
@@ -72,7 +74,7 @@ int get_color_and_object(const glm::dvec3 &dir, glm::vec3 &output_color, glm::dv
                 result_color += surface_color(light, surface_point, surface_normal, object_color);
             }
         }
-        output_color = glm::min(glm::vec3(1.0f), result_color);
+        result_color = glm::min(glm::vec3(1.0f), result_color);
     }
     return best_idx;
 }
@@ -88,10 +90,32 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
 
     glm::vec3 object_color;
     glm::dvec3 surface_point, surface_normal;
-    if (get_color_and_object(dir, object_color, surface_point, surface_normal) == NO_OBJECT) {
+    auto idx = get_color_and_object(g_ray_origin, dir, object_color, surface_point, surface_normal);
+    if (idx == NO_OBJECT) {
         return g_bg_color;
     }
-    return object_color;
+    auto result_color = object_color;
+    float cur_ratio = 1.0f;
+    int cur_reflections = 0;
+#define UPDATE_COLOR(col) result_color = (1.0f - cur_ratio) * result_color + cur_ratio * (col);
+    while (g_objects[idx].reflection_ratio > 0.0f) {
+        cur_ratio *= g_objects[idx].reflection_ratio;
+        if (cur_reflections == g_max_reflections) {
+            UPDATE_COLOR(g_bg_color)
+            break;
+        }
+        cur_reflections++;
+
+        dir = reflect_ray(dir, surface_normal);
+        auto origin = surface_point + SHADOW_BIAS * surface_normal;
+        idx = get_color_and_object(origin, dir, object_color, surface_point, surface_normal);
+        if (idx == NO_OBJECT) {
+            UPDATE_COLOR(g_bg_color)
+            break;
+        }
+        UPDATE_COLOR(object_color)
+    }
+    return result_color;
 }
 
 float update(const glm::dmat4 &camera_matrix)
