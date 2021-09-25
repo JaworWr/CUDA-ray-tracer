@@ -70,7 +70,7 @@ __device__ int get_color_and_object(const Object *__restrict__ objects, const Li
     double best_t = INFINITY;
     for (int i = 0; i < d_n_objects; i++) {
         double t = intersect_ray(objects[i].surface, origin, dir);
-        if (t >= EPS && t < 1e6 && t < best_t) {
+        if (t >= EPS && t < MAX_T && t < best_t) {
             best_t = t;
             best_idx = i;
         }
@@ -127,7 +127,7 @@ update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects
             float cur_ratio = 1.0f;
             int cur_reflections = 0;
 #define UPDATE_COLOR(col) output_color = (1.0f - cur_ratio) * output_color + cur_ratio * (col);
-            while (objects[idx].reflection_ratio > 0.0f) {
+            while (objects[idx].reflection_ratio > EPS) {
                 cur_ratio *= objects[idx].reflection_ratio;
                 if (cur_reflections == d_max_reflections) {
                     UPDATE_COLOR(d_bg_color)

@@ -16,6 +16,7 @@
 const double EPS = 1e-7;
 const double TWO_THIRD_PI = M_PI * 2.0 / 3.0;
 const double SHADOW_BIAS = 1e-2;
+const double MAX_T = 1e6;
 
 HOST_OR_DEVICE double intersect_ray(const SurfaceCoefs &coef, const glm::dvec3 &origin, const glm::dvec3 &dir)
 {

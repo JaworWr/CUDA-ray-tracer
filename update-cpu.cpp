@@ -49,7 +49,7 @@ int get_color_and_object(const glm::dvec3 &origin, const glm::dvec3 &dir, glm::v
     double best_t = INFINITY;
     for (int i = 0; i < g_objects.size(); i++) {
         double t = intersect_ray(g_objects[i].surface, origin, dir);
-        if (t >= EPS && t < 1e6 && t < best_t) {
+        if (t >= EPS && t < MAX_T && t < best_t) {
             best_t = t;
             best_idx = i;
         }
@@ -98,7 +98,7 @@ glm::vec3 render_pixel(const glm::dmat4 &camera_matrix, int pixel_x, int pixel_y
     float cur_ratio = 1.0f;
     int cur_reflections = 0;
 #define UPDATE_COLOR(col) result_color = (1.0f - cur_ratio) * result_color + cur_ratio * (col);
-    while (g_objects[idx].reflection_ratio > 0.0f) {
+    while (g_objects[idx].reflection_ratio > EPS) {
         cur_ratio *= g_objects[idx].reflection_ratio;
         if (cur_reflections == g_max_reflections) {
             UPDATE_COLOR(g_bg_color)
