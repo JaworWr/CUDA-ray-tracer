@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <glm/gtc/matrix_transform.hpp>
+#include "scene-exception.h"
 #include "shader-program.h"
 #include "update.h"
 #include "scene.h"
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
     try {
         scene = Scene::load_from_file(argv[1]);
     }
-    catch (SceneLoadException& e) {
+    catch (SceneException& e) {
         fprintf(stderr, "Error during scene loading\n%s\n", e.what());
         glfwTerminate();
         return EXIT_FAILURE;

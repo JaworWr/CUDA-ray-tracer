@@ -1,8 +1,10 @@
 #include "surface.h"
-
+#include "scene-exception.h"
 
 SurfaceCoefs SurfaceCoefs::sphere(const glm::dvec3 &center, double radius)
 {
+    validate_positive("sphere radius", radius);
+
     SurfaceCoefs coef{};
     coef.x2 = coef.y2 = coef.z2 = 1.0;
     coef.x = -2.0 * center.x;

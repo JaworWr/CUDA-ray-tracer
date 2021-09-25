@@ -1,26 +1,24 @@
 #include "scene.h"
+#include "scene-exception.h"
 #include <yaml-cpp/yaml.h>
-#include <sstream>
-#include <cstdio>
-#include <utility>
 
 // DEFAULTS
 const int MAX_REFLECTIONS = 5;
 const glm::vec3 BG_COLOR(1.0f);
 
-Scene::Scene(int px_width, int px_height, double vertical_fov_deg, int max_reflections, const glm::vec3 &bg_color)
+Object::Object(SurfaceCoefs surface, float reflection_ratio, const glm::vec3 &color)
+        : surface{surface}, reflection_ratio{reflection_ratio}, color{color}
+{
+    validate_positive("object reflection ratio", reflection_ratio);
+    validate_color(color);
+}
+
+Scene::Scene(unsigned int px_width, unsigned int px_height, double vertical_fov_deg, unsigned int max_reflections,
+             const glm::vec3 &bg_color)
         : px_width{px_width}, px_height{px_height}, max_reflections{max_reflections}, bg_color{bg_color}, objects{}
 {
     vertical_fov = glm::radians(vertical_fov_deg);
-}
-
-SceneLoadException::SceneLoadException(std::string error)
-        : error{std::move(error)}
-{}
-
-const char *SceneLoadException::what() const noexcept
-{
-    return error.c_str();
+    validate_color(bg_color);
 }
 
 std::string mark_to_string(YAML::Mark mark)
@@ -30,14 +28,14 @@ std::string mark_to_string(YAML::Mark mark)
     return ss.str();
 }
 
-SceneLoadException undefined_value(YAML::Mark parent_mark, const char *key)
+SceneException undefined_value(YAML::Mark parent_mark, const char *key)
 {
-    return SceneLoadException(std::string("Value '") + key + "' undefined, " + mark_to_string(parent_mark));
+    return SceneException(std::string("Value '") + key + "' undefined, " + mark_to_string(parent_mark));
 }
 
-SceneLoadException invalid_type(YAML::Mark mark, const char *key)
+SceneException invalid_type(YAML::Mark mark, const char *key)
 {
-    return SceneLoadException(std::string("Value '") + key + "' is invalid, " + mark_to_string(mark));
+    return SceneException(std::string("Value '") + key + "' is invalid, " + mark_to_string(mark));
 }
 
 template<typename T>
@@ -61,7 +59,7 @@ void check_sequence(const YAML::Node &node, const char *key)
         throw undefined_value(node.Mark(), key);
     }
     if (node[key].Type() != YAML::NodeType::Sequence) {
-        throw SceneLoadException(
+        throw SceneException(
                 std::string("Value '") + key + "' must be a sequence, " + mark_to_string(node[key].Mark()));
     }
 }
@@ -72,7 +70,7 @@ void check_map(const YAML::Node &node, const char *key)
         throw undefined_value(node.Mark(), key);
     }
     if (node[key].Type() != YAML::NodeType::Map) {
-        throw SceneLoadException(
+        throw SceneException(
                 std::string("Value '") + key + "' must be a mapping, " + mark_to_string(node[key].Mark()));
     }
 }
@@ -148,8 +146,8 @@ SurfaceCoefs parse_surface(const YAML::Node &node)
         load_coef(c);
         return coefs;
     }
-    throw SceneLoadException(std::string("Unknown surface type: '") + type + "', " +
-                             mark_to_string(node["type"].Mark()));
+    throw SceneException(std::string("Unknown surface type: '") + type + "', " +
+                         mark_to_string(node["type"].Mark()));
 }
 
 
@@ -160,21 +158,22 @@ Scene Scene::load_from_file(const char *path)
         scene_desc = YAML::LoadFile(path);
     }
     catch (YAML::BadFile &) {
-        throw SceneLoadException(std::string("Cannot read the file ") + path);
+        throw SceneException(std::string("Cannot read the file ") + path);
     }
     catch (YAML::ParserException &e) {
-        throw SceneLoadException(std::string("YAML parser error: ") + e.what());
+        throw SceneException(std::string("YAML parser error: ") + e.what());
     }
-    Scene scene(get_value<size_t>(scene_desc, "width"), get_value<size_t>(scene_desc, "height"),
-                get_value<double>(scene_desc, "fov"), scene_desc["max_reflections"].as<int>(MAX_REFLECTIONS),
+    Scene scene(get_value<unsigned int>(scene_desc, "width"), get_value<unsigned int>(scene_desc, "height"),
+                get_value<double>(scene_desc, "fov"), scene_desc["max_reflections"].as<unsigned int>(MAX_REFLECTIONS),
                 scene_desc["bg_color"].as<glm::vec3>(BG_COLOR));
     check_sequence(scene_desc, "objects");
     check_sequence(scene_desc, "light_sources");
     for (const auto &node: scene_desc["objects"]) {
-        Object object{};
-        object.surface = parse_surface(node);
-        object.reflection_ratio = node["reflection_ratio"].as<float>(0.0f);
-        object.color = get_value<glm::vec3>(node, "color");
+        Object object(
+                parse_surface(node),
+                node["reflection_ratio"].as<float>(0.0f),
+                get_value<glm::vec3>(node, "color")
+        );
         scene.objects.push_back(object);
     }
     for (const auto &node: scene_desc["light_sources"]) {
@@ -196,8 +195,8 @@ Scene Scene::load_from_file(const char *path)
             scene.lights.push_back(light);
         }
         else {
-            throw SceneLoadException(std::string("Light source type must be 'spherical' or 'directional', ") +
-                                     mark_to_string(node["type"].Mark()));
+            throw SceneException(std::string("Light source type must be 'spherical' or 'directional', ") +
+                                 mark_to_string(node["type"].Mark()));
         }
     }
     return scene;
