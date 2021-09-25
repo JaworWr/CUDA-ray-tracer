@@ -2,11 +2,14 @@
 #include <yaml-cpp/yaml.h>
 #include <sstream>
 #include <cstdio>
-
 #include <utility>
 
-Scene::Scene(int px_width, int px_height, double vertical_fov_deg, const glm::vec3 &bg_color)
-        : px_width{px_width}, px_height{px_height}, bg_color{bg_color}, objects{}
+// DEFAULTS
+const int MAX_REFLECTIONS = 5;
+const glm::vec3 BG_COLOR(1.0f);
+
+Scene::Scene(int px_width, int px_height, double vertical_fov_deg, int max_reflections, const glm::vec3 &bg_color)
+        : px_width{px_width}, px_height{px_height}, max_reflections{max_reflections}, bg_color{bg_color}, objects{}
 {
     vertical_fov = glm::radians(vertical_fov_deg);
 }
@@ -163,17 +166,18 @@ Scene Scene::load_from_file(const char *path)
         throw SceneLoadException(std::string("YAML parser error: ") + e.what());
     }
     Scene scene(get_value<size_t>(scene_desc, "width"), get_value<size_t>(scene_desc, "height"),
-                get_value<double>(scene_desc, "fov"), scene_desc["bg_color"].as<glm::vec3>(glm::vec3(1.0f)));
+                get_value<double>(scene_desc, "fov"), scene_desc["max_reflections"].as<int>(MAX_REFLECTIONS),
+                scene_desc["bg_color"].as<glm::vec3>(BG_COLOR));
     check_sequence(scene_desc, "objects");
     check_sequence(scene_desc, "light_sources");
-    for (const auto &node : scene_desc["objects"]) {
+    for (const auto &node: scene_desc["objects"]) {
         Object object{};
         object.surface = parse_surface(node);
         object.reflection_ratio = node["reflection_ratio"].as<double>(0.0);
         object.color = get_value<glm::vec3>(node, "color");
         scene.objects.push_back(object);
     }
-    for (const auto &node : scene_desc["light_sources"]) {
+    for (const auto &node: scene_desc["light_sources"]) {
         auto type = get_value<std::string>(node, "type");
         if (type == "directional") {
             auto light = LightSource::directional(

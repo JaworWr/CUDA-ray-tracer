@@ -27,12 +27,13 @@ struct Scene
     int px_width, px_height;
     double vertical_fov;
     glm::vec3 bg_color;
+    int max_reflections;
 
     std::vector<Object> objects;
     std::vector<LightSource> lights;
 
     Scene() = default;
-    Scene(int px_width, int px_height, double vertical_fov_deg, const glm::vec3& bg_color = glm::vec3(0.0f));
+    Scene(int px_width, int px_height, double vertical_fov_deg, int max_reflections, const glm::vec3& bg_color = glm::vec3(0.0f));
     double aspect_ratio() const { return (double) px_width / px_height; }
     static Scene load_from_file(const char *path);
 };
