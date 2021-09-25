@@ -1,4 +1,4 @@
-CUDA_HOME := /usr/local/cuda-10.1
+CUDA_HOME := /usr/local/cuda-10.2
 CC        := g++
 NVCC      := $(CUDA_HOME)/bin/nvcc
 FLAGS     := -std=c++14
@@ -13,7 +13,6 @@ HEADERS_CUDA := $(HEADERS) helper_cuda_opengl.h
 OBJ          := ray-tracer.o shader-program.o surface.o light.o scene.o
 OBJ_CPU      := $(OBJ) update-cpu.o
 OBJ_CUDA     := $(OBJ) update-cuda.o
-
 
 %.o: %.cpp %.h Makefile
 	$(CC) $(FLAGS) -c -o $@ $< $(INC)
