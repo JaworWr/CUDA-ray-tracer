@@ -19,4 +19,4 @@ objects:
     origin: [0, -2, 0]
     normal: [0, 1, 0]
     color: [0, 0.8, 0]
-    reflection_ratio: 0.5
+    reflection_ratio: 0.3
