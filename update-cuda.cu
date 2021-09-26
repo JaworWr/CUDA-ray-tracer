@@ -22,7 +22,6 @@ __constant__ size_t d_n_objects;
 LightSource *d_lights;
 __constant__ size_t d_n_lights;
 const glm::dvec4 RAY_ORIGIN(0.0, 0.0, 0.0, 1.0);
-__constant__ glm::dvec3 d_ray_origin;
 __constant__ int d_max_reflections;
 
 cudaEvent_t start, end;
@@ -54,7 +53,6 @@ void init_update(unsigned int texture, const Scene &scene)
     checkCudaErrors(cudaMemcpyToSymbol(d_aspect_ratio, &h_aspect_ratio, sizeof(double), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpyToSymbol(d_vertical_fov, &h_vertical_fov, sizeof(double), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpyToSymbol(d_bg_color, &scene.bg_color, sizeof(glm::ivec3), 0, cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpyToSymbol(d_ray_origin, &RAY_ORIGIN, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice));
     checkCudaErrors(
             cudaMemcpyToSymbol(d_max_reflections, &scene.max_reflections, sizeof(int), 0, cudaMemcpyHostToDevice));
 
@@ -104,7 +102,7 @@ __device__ int get_color_and_object(const Object *__restrict__ objects, const Li
 }
 
 __global__ void
-update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects,
+update_kernel(const glm::dvec3 ray_origin, const glm::dmat4 camera_matrix, const Object *__restrict__ objects,
               const LightSource *__restrict__ lights, cudaSurfaceObject_t surfaceObject)
 {
     size_t tx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -115,12 +113,12 @@ update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects
     double camera_x = (2.0 * ndc_x - 1.0) * d_aspect_ratio * d_vertical_fov;
     double camera_y = (2.0 * ndc_y - 1.0) * d_vertical_fov;
     glm::dvec3 dir(camera_x, camera_y, 1.0);
-    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - d_ray_origin);
+    dir = glm::normalize(glm::dvec3(camera_matrix * glm::dvec4(dir, 1.0)) - ray_origin);
 
     if (tx < d_width && ty < d_height) {
         glm::vec3 object_color(0.0f), output_color;
         glm::dvec3 surface_point, surface_normal;
-        int idx = get_color_and_object(objects, lights, d_ray_origin, dir, object_color, surface_point, surface_normal);
+        int idx = get_color_and_object(objects, lights, ray_origin, dir, object_color, surface_point, surface_normal);
         if (idx == NO_OBJECT) {
             output_color = d_bg_color;
         }
@@ -175,11 +173,10 @@ float update(const glm::dmat4 &camera_matrix)
     cudaSurfaceObject_t surface_object;
     checkCudaErrors(cudaCreateSurfaceObject(&surface_object, &resource_desc));
 
-    auto ray_origin = camera_matrix * RAY_ORIGIN;
-    checkCudaErrors(cudaMemcpyToSymbol(d_ray_origin, &ray_origin, sizeof(glm::dvec3), 0, cudaMemcpyHostToDevice));
+    auto ray_origin = glm::dvec3(camera_matrix * RAY_ORIGIN);
 
     cudaEventRecord(start);
-    update_kernel<<<gridSize, blockSize>>>(camera_matrix, d_objects, d_lights, surface_object);
+    update_kernel<<<gridSize, blockSize>>>(ray_origin, camera_matrix, d_objects, d_lights, surface_object);
     cudaEventRecord(end);
     cudaEventSynchronize(end);
     getLastCudaError("update_kernel error");
