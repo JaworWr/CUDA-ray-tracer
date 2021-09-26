@@ -9,6 +9,8 @@
 #include "light_impl.h"
 
 const int NO_OBJECT = -1;
+#define BLOCK_W 8
+#define BLOCK_H 8
 
 cudaGraphicsResource_t resource;
 size_t h_width, h_height;
@@ -159,8 +161,8 @@ update_kernel(const glm::dmat4 camera_matrix, const Object *__restrict__ objects
 
 float update(const glm::dmat4 &camera_matrix)
 {
-    dim3 blockSize(16, 16);
-    dim3 gridSize(idiv(h_width, 16), idiv(h_height, 16));
+    dim3 blockSize(BLOCK_W, BLOCK_H);
+    dim3 gridSize(idiv(h_width, BLOCK_W), idiv(h_height, BLOCK_H));
 
     cudaArray_t array;
     checkCudaErrors(cudaGraphicsMapResources(1, &resource));
