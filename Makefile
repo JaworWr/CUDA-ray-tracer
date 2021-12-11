@@ -1,39 +1,53 @@
-CUDA_HOME := /usr/local/cuda-10.2
-CC        := g++
-NVCC      := $(CUDA_HOME)/bin/nvcc
-FLAGS     := -std=c++14
-FLAGS_CU  := $(FLAGS) --ptxas-options=-v,-warn-spills -arch=sm_50 --use_fast_math -Xcudafe="--diag_suppress=2929"
-LIB       := -lGLEW -lGL -lglfw -lyaml-cpp
-LIB_CUDA  := $(LIB) -L$(CUDA_HOME)/lib -lcudart
-INC       := -I$(CUDA_HOME)/include -I.
+CUDA_HOME  := /usr/local/cuda-10.2
+CC         := g++
+NVCC       := $(CUDA_HOME)/bin/nvcc
+FLAGS      := -std=c++14
+FLAGS_CUDA := $(FLAGS) --ptxas-options=-v,-warn-spills -arch=sm_50 --use_fast_math -Xcudafe="--diag_suppress=2929"
+LIB        := -lGLEW -lGL -lglfw -lyaml-cpp
+LIB_CUDA   := $(LIB) -L$(CUDA_HOME)/lib -lcudart
+INC        := -I$(CUDA_HOME)/include -I.
 
-all: ray-tracer-cpu ray-tracer-cuda
+BUILD_DIR      := build
+BUILD_DIR_CUDA := $(BUILD_DIR)/cuda
+SOURCES_CPP    := $(wildcard *.cpp)
+SOURCES_CU     := $(wildcard *.cu)
+OBJ_CPP        := $(SOURCES_CPP:%.cpp=$(BUILD_DIR)/%.o)
+OBJ_CU         := $(SOURCES_CU:%.cu=$(BUILD_DIR_CUDA)/%.o)
 
-HEADERS      :=
-HEADERS_CUDA := $(HEADERS) helper_cuda_opengl.h
-OBJ          := ray-tracer.o shader-program.o surface.o light.o scene.o scene-exception.o
-OBJ_CPU      := $(OBJ) update-cpu.o
-OBJ_CUDA     := $(OBJ) update-cuda.o
+EXEC_CPU   := ray-tracer-cpu
+EXEC_CUDA  := ray-tracer-cuda
+OBJ_CPU    := $(filter-out $(BUILD_DIR)/update-%.o,$(OBJ_CPP)) $(BUILD_DIR)/update-cpu.o
+OBJ_CUDA   := $(filter-out $(BUILD_DIR)/update-%.o,$(OBJ_CPP)) $(BUILD_DIR_CUDA)/update-cuda.o
 
-%.o: %.cpp %.h Makefile
-	$(CC) $(FLAGS) -c -o $@ $< $(INC)
+all: $(EXEC_CPU) $(EXEC_CUDA)
 
-UPDATE_HEADERS := update.h surface_impl.h light_impl.h
+$(BUILD_DIR)/%.d: %.cpp Makefile
+	@mkdir -p $(BUILD_DIR)
+	@$(CC) -MM $(INC) $(FLAGS) $< > $@
+	@sed -i 's~$(*F).o~$@ $(@:.d=.o)~' $@
 
-update-cpu.o: update-cpu.cpp $(UPDATE_HEADERS) Makefile
-	$(CC) $(FLAGS) -c -o $@ $< $(INC)
+$(BUILD_DIR_CUDA)/%.d: %.cu Makefile
+	@mkdir -p $(BUILD_DIR_CUDA)
+	@$(NVCC) -MM $(INC) $(FLAGS_CUDA) $< > $@
+	@sed -i 's~$(*F).o~$@ $(@:.d=.o)~' $@
 
-update-cuda.o: update-cuda.cu $(UPDATE_HEADERS) Makefile
-	$(NVCC) $(FLAGS_CU) -dc -o $@ $< $(INC)
+include $(OBJ_CPP:.o=.d)
+include $(OBJ_CU:.o=.d)
 
-ray-tracer.o: ray-tracer.cpp Makefile
-	$(CC) $(FLAGS) -c -o $@ $< $(INC)
+$(BUILD_DIR)/%.o: %.cpp $(BUILD_DIR)/%.d
+	$(CC) $(FLAGS) $(INC) -c -o $@ $<
 
-ray-tracer-cpu: $(OBJ_CPU) $(HEADERS) Makefile
-	$(NVCC) $(FLAGS_CU) -o $@ $(OBJ_CPU) $(LIB_CUDA)
+$(BUILD_DIR_CUDA)/%.o: %.cu $(BUILD_DIR_CUDA)/%.d
+	$(NVCC) $(FLAGS_CUDA) $(INC) -c -o $@ $(@:$(BUILD_DIR_CUDA)/%.o=%.cu)
 
-ray-tracer-cuda: $(OBJ_CUDA) $(HEADERS_CUDA) Makefile
-	$(NVCC) $(FLAGS_CU) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
+$(EXEC_CPU): $(OBJ_CPU)
+	$(CC) $(FLAGS) -o $@ $(OBJ_CPU) $(LIB)
+
+$(EXEC_CUDA): $(OBJ_CUDA)
+	$(NVCC) $(FLAGS_CUDA) -o $@ $(OBJ_CUDA) $(LIB_CUDA)
 
 clean:
-	rm -f *.o ray-tracer-*
+	rm -f \
+		$(BUILD_DIR)/*.o \
+		$(BUILD_DIR_CUDA)/*.o \
+		$(EXEC_CPU) $(EXEC_CUDA)
