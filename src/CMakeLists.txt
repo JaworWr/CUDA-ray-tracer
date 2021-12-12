@@ -20,5 +20,12 @@ add_executable(ray-tracer-cpu ray-tracer.cpp update-cpu.cpp)
 add_executable(ray-tracer-cuda ray-tracer.cpp update-cuda.cu)
 
 target_link_libraries(ray-tracer-cpu PUBLIC ray-tracer-common common-libs)
-target_link_libraries(ray-tracer-cuda PUBLIC ray-tracer-common common-libs)
+target_link_libraries(ray-tracer-cuda PUBLIC ray-tracer-common common-libs cuda-libs)
+
+target_compile_options(ray-tracer-cpu PRIVATE -Wall)
+target_compile_options(ray-tracer-cuda PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-Wall>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+        $<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math -Xcudafe="--diag_suppress=2929" --ptxas-options=-v,-warn-spills>
+        )
 
