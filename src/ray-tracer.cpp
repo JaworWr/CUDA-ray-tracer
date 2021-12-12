@@ -7,6 +7,7 @@
 #include "shader-program.h"
 #include "update.h"
 #include "scene.h"
+#include "shader-paths.h"
 
 float vertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -175,7 +176,7 @@ int main(int argc, char *argv[])
 
     // initialize GLEW and load the shader program
     glewInit();
-    ShaderProgram program("ray-tracer.vert", "ray-tracer.frag");
+    ShaderProgram program(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 
     // initialize OpenGL objects
     unsigned int vbo;

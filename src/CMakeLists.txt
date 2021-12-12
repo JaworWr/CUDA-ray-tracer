@@ -1,5 +1,6 @@
-include_directories(${CUDA_ray_tracer_SOURCE_DIR}/include)
+include_directories(${INCLUDE_DIR})
 include_directories(/usr/local/cuda-10.2/include)
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 add_library(ray-tracer-common OBJECT
         light.cpp
