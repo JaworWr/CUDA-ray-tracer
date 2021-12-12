@@ -28,4 +28,5 @@ target_compile_options(ray-tracer-cuda PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall>
         $<$<COMPILE_LANGUAGE:CUDA>:--use_fast_math -Xcudafe="--diag_suppress=2929" --ptxas-options=-v,-warn-spills>
         )
+set_target_properties(ray-tracer-cuda PROPERTIES CUDA_ARCHITECTURES 50)
 
