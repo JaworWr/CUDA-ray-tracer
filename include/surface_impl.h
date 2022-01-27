@@ -103,7 +103,7 @@ HOST_OR_DEVICE double intersect_ray(const SurfaceCoefs &coef, const glm::dvec3 &
                 + coef.x * origin.x + coef.y * origin.y + coef.z * origin.z + coef.c;
 
     // find the roots of the polynomial
-    if (abs(t3) > EPS) {
+    if (fabs(t3) > EPS) {
         // degree = 3
         t2 /= t3;
         t1 /= t3;
@@ -135,7 +135,7 @@ HOST_OR_DEVICE double intersect_ray(const SurfaceCoefs &coef, const glm::dvec3 &
         }
 
     }
-    else if (abs(t2) > EPS) {
+    else if (fabs(t2) > EPS) {
         // degree = 2
         double delta = t1 * t1 - 4.0 * t2 * t0;
         if (delta < 0) {
@@ -147,7 +147,7 @@ HOST_OR_DEVICE double intersect_ray(const SurfaceCoefs &coef, const glm::dvec3 &
         if (x >= EPS) return x;
         return (-t1 + delta) / (2.0 * t2);
     }
-    else if (abs(t1) > EPS) {
+    else if (fabs(t1) > EPS) {
         // degree = 1
         return -t0 / t1;
     }
