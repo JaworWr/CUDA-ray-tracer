@@ -47,7 +47,7 @@ int get_color_and_object(const glm::dvec3 &origin, const glm::dvec3 &dir, glm::v
 {
     int best_idx = NO_OBJECT;
     double best_t = INFINITY;
-    for (int i = 0; i < g_objects.size(); i++) {
+    for (int i = 0; i < (int) g_objects.size(); i++) {
         double t = intersect_ray(g_objects[i].surface, origin, dir);
         if (t >= EPS && t < MAX_T && t < best_t) {
             best_t = t;

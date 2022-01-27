@@ -1,7 +1,6 @@
 #ifndef CUDA_RAY_TRACER_SURFACE_H
 #define CUDA_RAY_TRACER_SURFACE_H
 
-#include <cuda.h>
 #include <glm/glm.hpp>
 
 /*

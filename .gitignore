@@ -1,5 +1,3 @@
-*.o
-ray-tracer-*
 *.pdf
 *.log
 *.out
@@ -7,3 +5,8 @@ ray-tracer-*
 *.fls
 *.aux
 *.fdb_latexmk
+
+.idea
+
+cmake-build-*
+ray-tracer-*
