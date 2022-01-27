@@ -8,7 +8,6 @@ add_library(ray-tracer-common OBJECT
 target_include_directories(ray-tracer-common PUBLIC
         ${INCLUDE_DIR}
         ${PROJECT_BINARY_DIR}/include
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
         )
 
 add_library(common-libs INTERFACE)

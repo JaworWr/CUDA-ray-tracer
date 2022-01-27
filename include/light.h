@@ -1,7 +1,6 @@
 #ifndef CUDA_RAY_TRACER_LIGHT_H
 #define CUDA_RAY_TRACER_LIGHT_H
 
-#include <cuda.h>
 #include <glm/glm.hpp>
 
 struct LightSource {
