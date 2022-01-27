@@ -27,7 +27,8 @@ target_compile_options(ray-tracer-cuda PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall>
         $<$<COMPILE_LANGUAGE:CUDA>:
             --use_fast_math
-            -Xcudafe="--display_error_number --diag_suppress=2977"
+            -Xcudafe="--display_error_number"
+            -Xcudafe="--diag_suppress=2977"
             --ptxas-options=-v,-warn-spills
         >
         )
