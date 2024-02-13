@@ -34,13 +34,13 @@ HOST_OR_DEVICE glm::vec3 surface_color(const LightSource &light, const glm::dvec
     glm::vec3 color;
     if (light.is_spherical) {
         dir = light.p - object_point;
-        color = light.light_color / (4.0f * M_PIf32 * (float) glm::length2(dir));
+        color = light.light_color / (4.0f * (float) M_PIf32 * (float) glm::length2(dir));
         dir = glm::normalize(dir);
     } else {
         dir = light.p;
         color = light.light_color;
     }
-    return object_color / M_PIf32 * color * glm::max(0.0f, (float) glm::dot(object_norm, dir));
+    return object_color / (float) M_PIf32 * color * glm::max(0.0f, (float) glm::dot(object_norm, dir));
 }
 
 HOST_OR_DEVICE inline glm::dvec3 reflect_ray(const glm::dvec3 &dir, const glm::dvec3 &normal)
