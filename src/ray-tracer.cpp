@@ -32,6 +32,8 @@ double pitch = 0.0;
 double yaw = 90.0;
 const double sensitivity = 0.1;
 const double camera_base_speed = 10.0;
+const double camera_mult = 1.1;
+double camera_cur_mult = 1.;
 double last_frame_time = 0.0;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -60,7 +62,7 @@ void process_inputs(GLFWwindow *window)
     static bool capture_mouse = true;
     static bool capture_mouse_released = true;
     double delta_time = glfwGetTime() - last_frame_time;
-    double camera_speed = camera_base_speed * delta_time;
+    double camera_speed = camera_base_speed * camera_cur_mult * delta_time;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
@@ -126,6 +128,11 @@ void mouse_callback(GLFWwindow *window, double x, double y)
         pitch = -89.0f;
 }
 
+void scroll_callback(GLFWwindow *window, double dx, double dy) {
+    double mult_change = pow(camera_mult, dy);
+    camera_cur_mult *= mult_change;
+}
+
 int main(int argc, char *argv[])
 {
     // GLFW initialization
@@ -171,6 +178,7 @@ int main(int argc, char *argv[])
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
